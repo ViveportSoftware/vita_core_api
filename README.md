@@ -12,4 +12,5 @@ Test-time dependencies: none
 
 Build-time Prerequisite (Windows):
 
+* [CMake 3](https://cmake.org/)
 * Microsoft Visual Studio 2015
