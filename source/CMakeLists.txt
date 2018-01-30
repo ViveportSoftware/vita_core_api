@@ -3,6 +3,7 @@ cmake_minimum_required( VERSION 3.0 )
 ## Dump current settings
 message( "MY_PROJECT_DESC: " ${MY_PROJECT_DESC} )
 message( "MY_PROJECT_NAME: " ${MY_PROJECT_NAME} )
+message( "MY_PROJECT_SUFFIX: " ${MY_PROJECT_SUFFIX} )
 message( "MY_REVISION: " ${MY_REVISION} )
 message( "MY_VER: " ${MY_VER} )
 
@@ -51,7 +52,7 @@ if( WIN32 )
       VERSION_MINOR ${MY_VER_MINOR}
       VERSION_PATCH ${MY_VER_PATCH}
       VERSION_REVISION ${MY_REVISION}
-      ORIGINAL_FILENAME "${PROJECT_NAME}.dll" )
+      ORIGINAL_FILENAME "${PROJECT_NAME}${MY_PROJECT_SUFFIX}.dll" )
 
   ## Add additional definitions
   add_definitions( -D_UNICODE -DPSAPI_VERSION=1 )
@@ -71,6 +72,14 @@ if( WIN32 )
   target_compile_definitions(
       ${PROJECT_NAME}_static PUBLIC
       ${PROJECT_NAME}_STATIC=1 )
+
+  ## Set output name
+  set_target_properties(
+      ${PROJECT_NAME} PROPERTIES
+      OUTPUT_NAME ${PROJECT_NAME}${MY_PROJECT_SUFFIX} )
+  set_target_properties(
+      ${PROJECT_NAME}_static PROPERTIES
+      OUTPUT_NAME ${PROJECT_NAME}${MY_PROJECT_SUFFIX}_static )
 
   ## Set test sources
   set( MY_TEST_SOURCES

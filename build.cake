@@ -35,16 +35,14 @@ var msbuildSettings = new MSBuildSettings()
         Configuration = configuration,
         MaxCpuCount = 0
 };
-var cmakeOptions = new []
-{
-        "-DBUILD_WITH_SHARED_VCRT=" + cmakeWithSharedVcrt,
-        "-DBUILD_WITH_STATIC_VCRT=" + cmakeWithStaticVcrt,
-        "-DBUILD_WITH_TEST_RUNNER=" + cmakeWithTestRunner,
-        "-DMY_PROJECT_DESC=" + productDescription,
-        "-DMY_PROJECT_NAME=" + product,
-        "-DMY_REVISION=" + revision,
-        "-DMY_VER=" + version
-};
+var cmakeOptions = new List<string>();
+cmakeOptions.Add("-DBUILD_WITH_SHARED_VCRT=" + cmakeWithSharedVcrt);
+cmakeOptions.Add("-DBUILD_WITH_STATIC_VCRT=" + cmakeWithStaticVcrt);
+cmakeOptions.Add("-DBUILD_WITH_TEST_RUNNER=" + cmakeWithTestRunner);
+cmakeOptions.Add("-DMY_PROJECT_DESC=" + productDescription);
+cmakeOptions.Add("-DMY_PROJECT_NAME=" + product);
+cmakeOptions.Add("-DMY_REVISION=" + revision);
+cmakeOptions.Add("-DMY_VER=" + version);
 var isReleaseBuild = "Release".Equals(configuration) || "RelWithDebInfo".Equals(configuration);
 
 // Define copyright
@@ -119,7 +117,7 @@ Task("Build-Binary-Win32")
         CreateDirectory(tempPlatformDirWin32);
         var cmakeSettings = new CMakeSettings
         {
-                Options = cmakeOptions,
+                Options = cmakeOptions.ToArray(),
                 OutputPath = tempPlatformDirWin32
         };
         if (!string.IsNullOrEmpty(cmakeToolset))
@@ -144,9 +142,10 @@ Task("Build-Binary-x64")
     if(IsRunningOnWindows())
     {
         CreateDirectory(tempPlatformDirX64);
+        cmakeOptions.Add("-DMY_PROJECT_SUFFIX=64");
         var cmakeSettings = new CMakeSettings
         {
-                Options = cmakeOptions,
+                Options = cmakeOptions.ToArray(),
                 OutputPath = tempPlatformDirX64,
                 Platform = "x64"
         };
@@ -287,21 +286,21 @@ Task("Build-NuGet-Package")
     nuspecContents.Add(
         new NuSpecContent
         {
-                Source = string.Format("x64/{0}/{1}.dll", configuration, product),
+                Source = string.Format("x64/{0}/{1}64.dll", configuration, product),
                 Target = "lib\\x64"
         }
     );
     nuspecContents.Add(
         new NuSpecContent
         {
-                Source = string.Format("x64/{0}/{1}.lib", configuration, product),
+                Source = string.Format("x64/{0}/{1}64.lib", configuration, product),
                 Target = "lib\\x64"
         }
     );
     nuspecContents.Add(
         new NuSpecContent
         {
-                Source = string.Format("x64/{0}/{1}_static.lib", configuration, product),
+                Source = string.Format("x64/{0}/{1}64_static.lib", configuration, product),
                 Target = "lib\\x64"
         }
     );
@@ -331,7 +330,7 @@ Task("Build-NuGet-Package")
         nuspecContents.Add(
             new NuSpecContent
             {
-                    Source = string.Format("x64/{0}/{1}.pdb", configuration, product),
+                    Source = string.Format("x64/{0}/{1}64.pdb", configuration, product),
                     Target = "lib\\x64"
             }
         );
