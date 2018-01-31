@@ -371,7 +371,7 @@ namespace vita
                     const auto bytes_to_write = static_cast<DWORD>((std::strlen(message_to_send) + 1) * sizeof(char));  // NOLINT
 
                     DWORD bytes_written = 0;
-                    log::logger::get_instance().info("sending " + std::to_string(bytes_to_write) + " byte message: \"" + message_to_send + "\"");
+                    log::logger::get_instance().debug("sending " + std::to_string(bytes_to_write) + " byte message: \"" + message_to_send + "\"");
                     success = WriteFile(
                             pipe_handle,
                             message_to_send,
@@ -453,8 +453,7 @@ namespace vita
                     const auto bytes_to_write = static_cast<DWORD>((std::strlen(message_to_send) + 1) * sizeof(char));  // NOLINT
 
                     DWORD bytes_written = 0;
-                    std::cout << "sending " << bytes_to_write << " byte message: \"" << message_to_send << "\"" << std::endl;
-                    log::logger::get_instance().info("sending " + std::to_string(bytes_to_write) + " byte message: \"" + message_to_send + "\"");
+                    log::logger::get_instance().debug("sending " + std::to_string(bytes_to_write) + " byte message: \"" + message_to_send + "\"");
                     success = WriteFile(
                             pipe_handle,
                             message_to_send,
