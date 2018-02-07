@@ -205,7 +205,7 @@ Task("Sign-Binaries")
     var signKey = "./temp/key.pfx";
     System.IO.File.WriteAllBytes(signKey, Convert.FromBase64String(signKeyEnc));
 
-    var file = string.Format("./temp/{0}/x64/{0}/{1}.dll", configuration, product);
+    var file = string.Format("./temp/{0}/x64/{0}/{1}64.dll", configuration, product);
 
     if (totalTimeInMilli < signIntervalInMilli)
     {
