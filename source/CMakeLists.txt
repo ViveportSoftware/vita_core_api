@@ -92,7 +92,7 @@ if( WIN32 )
   add_executable(
       test_${PROJECT_NAME}_static
       ${MY_TEST_SOURCES} )
-  
+
   ## Set compile-time dependency libraries
   target_link_libraries(
       test_${PROJECT_NAME}
@@ -100,7 +100,7 @@ if( WIN32 )
   target_link_libraries(
       test_${PROJECT_NAME}_static
       ${PROJECT_NAME}_static )
-  
+
   if( BUILD_WITH_TEST_RUNNER )
     enable_testing()
     add_test(
