@@ -69,8 +69,8 @@ var msbuildCTestTargetWin32 = File(tempPlatformDirWin32.ToString() + "/RUN_TESTS
 // Define signing key, password and timestamp server
 var signKeyEnc = EnvironmentVariable("SIGNKEYENC") ?? "NOTSET";
 var signPass = EnvironmentVariable("SIGNPASS") ?? "NOTSET";
-var signSha1Uri = new Uri("http://timestamp.verisign.com/scripts/timstamp.dll");
-var signSha256Uri = new Uri("http://sha256timestamp.ws.symantec.com/sha256/timestamp");
+var signSha1Uri = new Uri("http://timestamp.digicert.com");
+var signSha256Uri = new Uri("http://timestamp.digicert.com");
 
 // Define nuget push source and key
 var nugetApiKey = EnvironmentVariable("NUGET_PUSH_TOKEN") ?? EnvironmentVariable("NUGET_APIKEY") ?? "NOTSET";
