@@ -96,7 +96,14 @@ Task("Display-Config")
     Information("Build target: {0}", target);
     Information("Build configuration: {0}", configuration);
     Information("Build commitId: {0}", commitId);
-    Information("Build version: {0}", semanticVersion);
+    if (isReleaseBuild)
+    {
+        Information("Build version: {0}", semanticVersion);
+    }
+    else
+    {
+        Information("Build version: {0}-CI{1}", ciVersion, revision);
+    }
 });
 
 Task("Clean-Workspace")

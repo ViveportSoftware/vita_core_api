@@ -54,7 +54,10 @@ namespace vita
                 config& operator=(config&& other) NOEXCEPT;
                 ~config();
 
-                std::wstring get(const std::wstring& key, const std::wstring& default_value) const;
+                std::wstring get(
+                        const std::wstring& key,
+                        const std::wstring& default_value
+                ) const;
 
             private:
                 struct impl;
@@ -141,7 +144,10 @@ namespace vita
             class VITA_CORE_API_CPP convert
             {
             public:
-                static std::string to_hex_string(const unsigned char* input, size_t size);
+                static std::string to_hex_string(
+                        const unsigned char* input,
+                        size_t size
+                );
                 static std::wstring utf8_string_to_wstring(const std::string& input);
                 static std::string wstring_to_utf8_string(const std::wstring& input);
             };

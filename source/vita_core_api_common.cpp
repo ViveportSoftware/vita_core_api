@@ -18,9 +18,7 @@ namespace vita
             {
             }
 
-            logger::logger(const logger& other) : impl_(other.impl_)
-            {
-            }
+            logger::logger(const logger& other) = default;
 
             logger::logger(logger&& other) NOEXCEPT
             {
@@ -161,7 +159,10 @@ int vita_core_runtime_ipcchannel_client_is_ready()
     return 0;
 }
 
-size_t vita_core_runtime_ipcchannel_client_request(const wchar_t* input, wchar_t* output, const size_t count)
+size_t vita_core_runtime_ipcchannel_client_request(
+        const wchar_t* input,
+        wchar_t* output,
+        const size_t count)
 {
     auto result = vita::core::runtime::ipcchannel::client::get_instance().request(input);
     const auto result_array = result.c_str();
