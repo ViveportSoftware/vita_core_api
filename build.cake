@@ -178,6 +178,7 @@ Task("Build-Binary-ARM")
 });
 
 Task("Build-Binary-x64")
+    .WithCriteria(() => "v140".Equals(cmakeToolset) || "v141".Equals(cmakeToolset))
     .IsDependentOn("Build-Binary-ARM")
     .Does(() =>
 {
@@ -340,69 +341,75 @@ Task("Sign-Binaries")
     );
     lastSignTimestamp = DateTime.Now;
 
-    file = string.Format("./temp/{0}/ARM/{0}/{1}.dll", configuration, product);
-
-    if (totalTimeInMilli < signIntervalInMilli)
+    if ("v140".Equals(cmakeToolset) || "v141".Equals(cmakeToolset))
     {
-        System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
+        file = string.Format("./temp/{0}/ARM/{0}/{1}.dll", configuration, product);
+
+        if (totalTimeInMilli < signIntervalInMilli)
+        {
+            System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
+        }
+        Sign(
+                file,
+                new SignToolSignSettings
+                {
+                        TimeStampUri = signSha1Uri,
+                        CertPath = signKey,
+                        Password = signPass
+                }
+        );
+        lastSignTimestamp = DateTime.Now;
+
+        System.Threading.Thread.Sleep(signIntervalInMilli);
+        Sign(
+                file,
+                new SignToolSignSettings
+                {
+                        AppendSignature = true,
+                        TimeStampUri = signSha256Uri,
+                        DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
+                        TimeStampDigestAlgorithm = SignToolDigestAlgorithm.Sha256,
+                        CertPath = signKey,
+                        Password = signPass
+                }
+        );
+        lastSignTimestamp = DateTime.Now;
     }
-    Sign(
-            file,
-            new SignToolSignSettings
-            {
-                    TimeStampUri = signSha1Uri,
-                    CertPath = signKey,
-                    Password = signPass
-            }
-    );
-    lastSignTimestamp = DateTime.Now;
 
-    System.Threading.Thread.Sleep(signIntervalInMilli);
-    Sign(
-            file,
-            new SignToolSignSettings
-            {
-                    AppendSignature = true,
-                    TimeStampUri = signSha256Uri,
-                    DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
-                    TimeStampDigestAlgorithm = SignToolDigestAlgorithm.Sha256,
-                    CertPath = signKey,
-                    Password = signPass
-            }
-    );
-    lastSignTimestamp = DateTime.Now;
-
-    file = string.Format("./temp/{0}/ARM64/{0}/{1}.dll", configuration, product);
-
-    if (totalTimeInMilli < signIntervalInMilli)
+    if ("v141".Equals(cmakeToolset))
     {
-        System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
-    }
-    Sign(
-            file,
-            new SignToolSignSettings
-            {
-                    TimeStampUri = signSha1Uri,
-                    CertPath = signKey,
-                    Password = signPass
-            }
-    );
-    lastSignTimestamp = DateTime.Now;
+        file = string.Format("./temp/{0}/ARM64/{0}/{1}.dll", configuration, product);
 
-    System.Threading.Thread.Sleep(signIntervalInMilli);
-    Sign(
-            file,
-            new SignToolSignSettings
-            {
-                    AppendSignature = true,
-                    TimeStampUri = signSha256Uri,
-                    DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
-                    TimeStampDigestAlgorithm = SignToolDigestAlgorithm.Sha256,
-                    CertPath = signKey,
-                    Password = signPass
-            }
-    );
-    lastSignTimestamp = DateTime.Now;
+        if (totalTimeInMilli < signIntervalInMilli)
+        {
+            System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
+        }
+        Sign(
+                file,
+                new SignToolSignSettings
+                {
+                        TimeStampUri = signSha1Uri,
+                        CertPath = signKey,
+                        Password = signPass
+                }
+        );
+        lastSignTimestamp = DateTime.Now;
+
+        System.Threading.Thread.Sleep(signIntervalInMilli);
+        Sign(
+                file,
+                new SignToolSignSettings
+                {
+                        AppendSignature = true,
+                        TimeStampUri = signSha256Uri,
+                        DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
+                        TimeStampDigestAlgorithm = SignToolDigestAlgorithm.Sha256,
+                        CertPath = signKey,
+                        Password = signPass
+                }
+        );
+        lastSignTimestamp = DateTime.Now;
+    }
 });
 
 Task("Build-NuGet-Package")
