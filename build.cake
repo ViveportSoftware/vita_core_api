@@ -439,27 +439,30 @@ Task("Build-NuGet-Package")
                 Target = "lib\\x64"
         }
     );
-    nuspecContents.Add(
-        new NuSpecContent
-        {
-                Source = string.Format("ARM64/{0}/{1}64.dll", configuration, product),
-                Target = "lib\\ARM64"
-        }
-    );
-    nuspecContents.Add(
-        new NuSpecContent
-        {
-                Source = string.Format("ARM64/{0}/{1}64.lib", configuration, product),
-                Target = "lib\\ARM64"
-        }
-    );
-    nuspecContents.Add(
-        new NuSpecContent
-        {
-                Source = string.Format("ARM64/{0}/{1}64_static.lib", configuration, product),
-                Target = "lib\\ARM64"
-        }
-    );
+    if ("v141".Equals(cmakeToolset))
+    {
+        nuspecContents.Add(
+            new NuSpecContent
+            {
+                    Source = string.Format("ARM64/{0}/{1}64.dll", configuration, product),
+                    Target = "lib\\ARM64"
+            }
+        );
+        nuspecContents.Add(
+            new NuSpecContent
+            {
+                    Source = string.Format("ARM64/{0}/{1}64.lib", configuration, product),
+                    Target = "lib\\ARM64"
+            }
+        );
+        nuspecContents.Add(
+            new NuSpecContent
+            {
+                    Source = string.Format("ARM64/{0}/{1}64_static.lib", configuration, product),
+                    Target = "lib\\ARM64"
+            }
+        );
+    }
     nuspecContents.Add(
         new NuSpecContent
         {
@@ -481,27 +484,30 @@ Task("Build-NuGet-Package")
                 Target = "lib\\Win32"
         }
     );
-    nuspecContents.Add(
-        new NuSpecContent
-        {
-                Source = string.Format("ARM/{0}/{1}.dll", configuration, product),
-                Target = "lib\\ARM"
-        }
-    );
-    nuspecContents.Add(
-        new NuSpecContent
-        {
-                Source = string.Format("ARM/{0}/{1}.lib", configuration, product),
-                Target = "lib\\ARM"
-        }
-    );
-    nuspecContents.Add(
-        new NuSpecContent
-        {
-                Source = string.Format("ARM/{0}/{1}_static.lib", configuration, product),
-                Target = "lib\\ARM"
-        }
-    );
+    if ("v140".Equals(cmakeToolset) || "v141".Equals(cmakeToolset))
+    {
+        nuspecContents.Add(
+            new NuSpecContent
+            {
+                    Source = string.Format("ARM/{0}/{1}.dll", configuration, product),
+                    Target = "lib\\ARM"
+            }
+        );
+        nuspecContents.Add(
+            new NuSpecContent
+            {
+                    Source = string.Format("ARM/{0}/{1}.lib", configuration, product),
+                    Target = "lib\\ARM"
+            }
+        );
+        nuspecContents.Add(
+            new NuSpecContent
+            {
+                    Source = string.Format("ARM/{0}/{1}_static.lib", configuration, product),
+                    Target = "lib\\ARM"
+            }
+        );
+    }
     if (("Debug".Equals(configuration) || "RelWithDebInfo".Equals(configuration)))
     {
         nuspecContents.Add(
@@ -511,13 +517,16 @@ Task("Build-NuGet-Package")
                     Target = "lib\\x64"
             }
         );
-        nuspecContents.Add(
-            new NuSpecContent
-            {
-                    Source = string.Format("ARM64/{0}/{1}64.pdb", configuration, product),
-                    Target = "lib\\ARM64"
-            }
-        );
+        if ("v141".Equals(cmakeToolset))
+        {
+            nuspecContents.Add(
+                new NuSpecContent
+                {
+                        Source = string.Format("ARM64/{0}/{1}64.pdb", configuration, product),
+                        Target = "lib\\ARM64"
+                }
+            );
+        }
         nuspecContents.Add(
             new NuSpecContent
             {
@@ -525,13 +534,16 @@ Task("Build-NuGet-Package")
                     Target = "lib\\Win32"
             }
         );
-        nuspecContents.Add(
-            new NuSpecContent
-            {
-                    Source = string.Format("ARM/{0}/{1}.pdb", configuration, product),
-                    Target = "lib\\ARM"
-            }
-        );
+        if ("v140".Equals(cmakeToolset) || "v141".Equals(cmakeToolset))
+        {
+            nuspecContents.Add(
+                new NuSpecContent
+                {
+                        Source = string.Format("ARM/{0}/{1}.pdb", configuration, product),
+                        Target = "lib\\ARM"
+                }
+            );
+        }
     }
     nuspecContents.Add(
         new NuSpecContent
