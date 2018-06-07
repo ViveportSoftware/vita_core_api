@@ -59,12 +59,18 @@ var tempDir = Directory("./temp");
 var packagesDir = Directory("./source/packages");
 var nugetDir = Directory("./dist") + Directory(configuration) + Directory("nuget");
 var homeDir = Directory(EnvironmentVariable("USERPROFILE") ?? EnvironmentVariable("HOME"));
+var tempPlatformDirARM = tempDir + Directory(configuration) + Directory("ARM");
+var tempPlatformDirARM64 = tempDir + Directory(configuration) + Directory("ARM64");
 var tempPlatformDirWin32 = tempDir + Directory(configuration) + Directory("Win32");
 var tempPlatformDirX64 = tempDir + Directory(configuration) + Directory("x64");
+var msbuildDefaultTargetARM = File(tempPlatformDirARM.ToString() + "/" + product + ".sln");
+var msbuildDefaultTargetARM64 = File(tempPlatformDirARM64.ToString() + "/" + product + ".sln");
 var msbuildDefaultTargetWin32 = File(tempPlatformDirWin32.ToString() + "/" + product + ".sln");
 var msbuildDefaultTargetX64 = File(tempPlatformDirX64.ToString() + "/" + product + ".sln");
-var msbuildCTestTargetX64 = File(tempPlatformDirX64.ToString() + "/RUN_TESTS.vcxproj");
+var msbuildCTestTargetARM = File(tempPlatformDirARM.ToString() + "/RUN_TESTS.vcxproj");
+var msbuildCTestTargetARM64 = File(tempPlatformDirARM64.ToString() + "/RUN_TESTS.vcxproj");
 var msbuildCTestTargetWin32 = File(tempPlatformDirWin32.ToString() + "/RUN_TESTS.vcxproj");
+var msbuildCTestTargetX64 = File(tempPlatformDirX64.ToString() + "/RUN_TESTS.vcxproj");
 
 // Define signing key, password and timestamp server
 var signKeyEnc = EnvironmentVariable("SIGNKEYENC") ?? "NOTSET";
@@ -142,8 +148,37 @@ Task("Build-Binary-Win32")
     }
 });
 
-Task("Build-Binary-x64")
+Task("Build-Binary-ARM")
+    .WithCriteria(() => "v140".Equals(cmakeToolset) || "v141".Equals(cmakeToolset))
     .IsDependentOn("Build-Binary-Win32")
+    .Does(() =>
+{
+    if(IsRunningOnWindows())
+    {
+        CreateDirectory(tempPlatformDirARM);
+        var cmakeSettings = new CMakeSettings
+        {
+                Options = cmakeOptions.ToArray(),
+                OutputPath = tempPlatformDirARM,
+                Platform = "ARM"
+        };
+        if (!string.IsNullOrEmpty(cmakeToolset))
+        {
+            cmakeSettings.Toolset = cmakeToolset;
+        }
+        CMake(
+                sourceDir,
+                cmakeSettings
+        );
+        MSBuild(
+                msbuildDefaultTargetARM,
+                msbuildSettings
+        );
+    }
+});
+
+Task("Build-Binary-x64")
+    .IsDependentOn("Build-Binary-ARM")
     .Does(() =>
 {
     if(IsRunningOnWindows())
@@ -171,9 +206,38 @@ Task("Build-Binary-x64")
     }
 });
 
+Task("Build-Binary-ARM64")
+    .WithCriteria(() => "v141".Equals(cmakeToolset))
+    .IsDependentOn("Build-Binary-x64")
+    .Does(() =>
+{
+    if(IsRunningOnWindows())
+    {
+        CreateDirectory(tempPlatformDirARM64);
+        var cmakeSettings = new CMakeSettings
+        {
+                Options = cmakeOptions.ToArray(),
+                OutputPath = tempPlatformDirARM64,
+                Platform = "ARM64"
+        };
+        if (!string.IsNullOrEmpty(cmakeToolset))
+        {
+            cmakeSettings.Toolset = cmakeToolset;
+        }
+        CMake(
+                sourceDir,
+                cmakeSettings
+        );
+        MSBuild(
+                msbuildDefaultTargetARM64,
+                msbuildSettings
+        );
+    }
+});
+
 Task("Test-Binary-Win32")
     .WithCriteria(() => FileExists(msbuildCTestTargetWin32))
-    .IsDependentOn("Build-Binary-x64")
+    .IsDependentOn("Build-Binary-ARM64")
     .Does(() =>
 {
     if(IsRunningOnWindows())
@@ -275,6 +339,70 @@ Task("Sign-Binaries")
             }
     );
     lastSignTimestamp = DateTime.Now;
+
+    file = string.Format("./temp/{0}/ARM/{0}/{1}.dll", configuration, product);
+
+    if (totalTimeInMilli < signIntervalInMilli)
+    {
+        System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
+    }
+    Sign(
+            file,
+            new SignToolSignSettings
+            {
+                    TimeStampUri = signSha1Uri,
+                    CertPath = signKey,
+                    Password = signPass
+            }
+    );
+    lastSignTimestamp = DateTime.Now;
+
+    System.Threading.Thread.Sleep(signIntervalInMilli);
+    Sign(
+            file,
+            new SignToolSignSettings
+            {
+                    AppendSignature = true,
+                    TimeStampUri = signSha256Uri,
+                    DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
+                    TimeStampDigestAlgorithm = SignToolDigestAlgorithm.Sha256,
+                    CertPath = signKey,
+                    Password = signPass
+            }
+    );
+    lastSignTimestamp = DateTime.Now;
+
+    file = string.Format("./temp/{0}/ARM64/{0}/{1}.dll", configuration, product);
+
+    if (totalTimeInMilli < signIntervalInMilli)
+    {
+        System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
+    }
+    Sign(
+            file,
+            new SignToolSignSettings
+            {
+                    TimeStampUri = signSha1Uri,
+                    CertPath = signKey,
+                    Password = signPass
+            }
+    );
+    lastSignTimestamp = DateTime.Now;
+
+    System.Threading.Thread.Sleep(signIntervalInMilli);
+    Sign(
+            file,
+            new SignToolSignSettings
+            {
+                    AppendSignature = true,
+                    TimeStampUri = signSha256Uri,
+                    DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
+                    TimeStampDigestAlgorithm = SignToolDigestAlgorithm.Sha256,
+                    CertPath = signKey,
+                    Password = signPass
+            }
+    );
+    lastSignTimestamp = DateTime.Now;
 });
 
 Task("Build-NuGet-Package")
@@ -314,6 +442,27 @@ Task("Build-NuGet-Package")
     nuspecContents.Add(
         new NuSpecContent
         {
+                Source = string.Format("ARM64/{0}/{1}64.dll", configuration, product),
+                Target = "lib\\ARM64"
+        }
+    );
+    nuspecContents.Add(
+        new NuSpecContent
+        {
+                Source = string.Format("ARM64/{0}/{1}64.lib", configuration, product),
+                Target = "lib\\ARM64"
+        }
+    );
+    nuspecContents.Add(
+        new NuSpecContent
+        {
+                Source = string.Format("ARM64/{0}/{1}64_static.lib", configuration, product),
+                Target = "lib\\ARM64"
+        }
+    );
+    nuspecContents.Add(
+        new NuSpecContent
+        {
                 Source = string.Format("Win32/{0}/{1}.dll", configuration, product),
                 Target = "lib\\Win32"
         }
@@ -332,6 +481,27 @@ Task("Build-NuGet-Package")
                 Target = "lib\\Win32"
         }
     );
+    nuspecContents.Add(
+        new NuSpecContent
+        {
+                Source = string.Format("ARM/{0}/{1}.dll", configuration, product),
+                Target = "lib\\ARM"
+        }
+    );
+    nuspecContents.Add(
+        new NuSpecContent
+        {
+                Source = string.Format("ARM/{0}/{1}.lib", configuration, product),
+                Target = "lib\\ARM"
+        }
+    );
+    nuspecContents.Add(
+        new NuSpecContent
+        {
+                Source = string.Format("ARM/{0}/{1}_static.lib", configuration, product),
+                Target = "lib\\ARM"
+        }
+    );
     if (("Debug".Equals(configuration) || "RelWithDebInfo".Equals(configuration)))
     {
         nuspecContents.Add(
@@ -344,8 +514,22 @@ Task("Build-NuGet-Package")
         nuspecContents.Add(
             new NuSpecContent
             {
+                    Source = string.Format("ARM64/{0}/{1}64.pdb", configuration, product),
+                    Target = "lib\\ARM64"
+            }
+        );
+        nuspecContents.Add(
+            new NuSpecContent
+            {
                     Source = string.Format("Win32/{0}/{1}.pdb", configuration, product),
                     Target = "lib\\Win32"
+            }
+        );
+        nuspecContents.Add(
+            new NuSpecContent
+            {
+                    Source = string.Format("ARM/{0}/{1}.pdb", configuration, product),
+                    Target = "lib\\ARM"
             }
         );
     }

@@ -1,3 +1,4 @@
+#pragma comment(lib, "advapi32.lib")
 #pragma comment(lib, "psapi.lib")
 
 #include <codecvt>
