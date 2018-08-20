@@ -19,7 +19,14 @@ namespace vita
             {
             }
 
-            logger::logger(const logger& other) = default;
+            logger::logger(const logger& other)
+            {
+                if (&other == this)
+                {
+                    return;
+                }
+                impl_ = other.impl_;
+            }
 
             logger::logger(logger&& other) NOEXCEPT
             {

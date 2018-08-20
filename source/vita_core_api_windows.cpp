@@ -22,7 +22,14 @@ namespace vita
             {
             }
 
-            config::config(const config& other) = default;
+            config::config(const config& other)
+            {
+                if (&other == this)
+                {
+                    return;
+                }
+                impl_ = other.impl_;
+            }
 
             config::config(config&& other) NOEXCEPT
             {
