@@ -14,7 +14,7 @@ namespace vita
     {
         namespace config
         {
-            struct config::impl
+            class config::impl
             {
             };
 
@@ -252,13 +252,13 @@ namespace vita
 
             namespace ipcchannel
             {
-                struct client::impl
+                class client::impl
                 {
-                    std::wstring name;
-
+                public:
                     std::wstring get_wide_name() const;
-
                     bool set_name(const std::string& name);
+
+                    std::wstring name;
                 };
 
                 std::wstring client::impl::get_wide_name() const

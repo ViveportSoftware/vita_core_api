@@ -9,8 +9,9 @@ namespace vita
     {
         namespace log
         {
-            struct logger::impl
+            class logger::impl
             {
+            public:
                 std::shared_ptr<spdlog::logger> internal_logger;
             };
 

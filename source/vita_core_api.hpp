@@ -60,7 +60,7 @@ namespace vita
                 ) const;
 
             private:
-                struct impl;
+                class impl;
                 impl* impl_;
             };
         }
@@ -94,7 +94,7 @@ namespace vita
                 void warn(const std::string& message) const;
 
             private:
-                struct impl;
+                class impl;
                 impl* impl_;
             };
         }
@@ -126,7 +126,7 @@ namespace vita
                     bool set_name(const std::string& name) const;
 
                 private:
-                    struct impl;
+                    class impl;
                     impl* impl_;
                 };
             }
