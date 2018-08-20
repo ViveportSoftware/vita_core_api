@@ -47,7 +47,6 @@ namespace vita
             public:
                 static config& get_instance();
 
-                config();
                 config(const config& other);
                 config(config&& other) NOEXCEPT;
                 config& operator=(const config& other);
@@ -60,6 +59,8 @@ namespace vita
                 ) const;
 
             private:
+                config();
+
                 class impl;
                 impl* impl_;
             };
@@ -81,7 +82,6 @@ namespace vita
             public:
                 static logger& get_instance();
 
-                logger();
                 logger(const logger& other);
                 logger(logger&& other) NOEXCEPT;
                 logger& operator=(const logger& other);
@@ -94,6 +94,8 @@ namespace vita
                 void warn(const std::string& message) const;
 
             private:
+                logger();
+
                 class impl;
                 impl* impl_;
             };
@@ -114,7 +116,6 @@ namespace vita
                 public:
                     static client& get_instance();
 
-                    client();
                     client(const client& other);
                     client(client&& other) NOEXCEPT;
                     client& operator=(const client& other);
@@ -126,6 +127,8 @@ namespace vita
                     bool set_name(const std::string& name) const;
 
                 private:
+                    client();
+
                     class impl;
                     impl* impl_;
                 };
