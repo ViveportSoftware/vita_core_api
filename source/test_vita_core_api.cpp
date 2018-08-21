@@ -12,6 +12,12 @@ TEST_CASE("Machine ID is present", "[platform]") {
     REQUIRE(!machine_id.empty());
 }
 
+TEST_CASE("Machine serial number is present", "[platform]") {
+    const auto machine_serial_number = vita::core::runtime::platform::get_machine_serial_number();
+    std::cout << "machine serial number: \"" << machine_serial_number << "\"" << std::endl;
+    REQUIRE(!machine_serial_number.empty());
+}
+
 TEST_CASE("OS version is present", "[platform]") {
     const auto version = vita::core::runtime::platform::get_os_version();
     std::cout << "operating system version: \"" << version << "\"" << std::endl;

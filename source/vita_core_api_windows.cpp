@@ -1,6 +1,9 @@
 #pragma comment(lib, "advapi32.lib")
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "oleAut32.lib")
 #pragma comment(lib, "psapi.lib")
 #pragma comment(lib, "version.lib")
+#pragma comment(lib, "wbemuuid.lib")
 
 #include <codecvt>
 #include <iostream>
@@ -8,6 +11,7 @@
 
 #include <windows.h>
 #include <psapi.h>
+#include <wbemidl.h>
 
 #include "vita_core_api.hpp"
 
@@ -23,6 +27,12 @@ LONG registry_get_string_value(
         const std::wstring& value_name,
         std::wstring& value,
         const std::wstring& default_value
+);
+std::string wmi_get_string_value(
+        const std::wstring& wmi_namespace,
+        const std::wstring& wmi_query_language,
+        const std::wstring& wmi_query_string,
+        const std::wstring& wmi_property_name
 );
 //- forward declaration
 
@@ -304,6 +314,21 @@ namespace vita
                         nullptr
                 );
                 result.append(buffer);
+                return result;
+            }
+
+            std::string platform::get_machine_serial_number()
+            {
+                const std::wstring wmi_namespace = L"root\\cimv2";
+                const std::wstring wmi_query_language = L"WQL";
+                const std::wstring wmi_query_string = L"SELECT * FROM Win32_ComputerSystemProduct";
+                const std::wstring wmi_property_name = L"UUID";
+                auto result = wmi_get_string_value(
+                        wmi_namespace,
+                        wmi_query_language,
+                        wmi_query_string,
+                        wmi_property_name
+                );
                 return result;
             }
 
@@ -761,4 +786,155 @@ LONG registry_get_string_value(
         value = registry_value_data;
     }
     return status;
+}
+
+std::string wmi_get_string_value(
+        const std::wstring& wmi_namespace,
+        const std::wstring& wmi_query_language,
+        const std::wstring& wmi_query_string,
+        const std::wstring& wmi_property_name)
+{
+    std::string result;
+    auto status = CoInitializeEx(
+            nullptr,
+            COINIT_MULTITHREADED
+    );
+    if (FAILED(status))
+    {
+        vita::core::log::logger::get_instance().error("can not initialize com conponent. status=" + std::to_string(status));
+        return result;
+    }
+
+    status = CoInitializeSecurity(
+            nullptr,
+            -1,
+            nullptr,
+            nullptr,
+            RPC_C_AUTHN_LEVEL_DEFAULT,
+            RPC_C_IMP_LEVEL_IMPERSONATE,
+            nullptr,
+            EOAC_NONE,
+            nullptr
+    );
+    if (FAILED(status))
+    {
+        vita::core::log::logger::get_instance().error("can not initialize com security. status=" + std::to_string(status));
+        CoUninitialize();
+        return result;
+    }
+
+    IWbemLocator* wbem_locator = nullptr;
+    status = CoCreateInstance(
+            CLSID_WbemLocator,
+            nullptr,
+            CLSCTX_INPROC_SERVER,
+            IID_IWbemLocator,
+            reinterpret_cast<LPVOID*>(&wbem_locator)
+    );
+    if (FAILED(status))
+    {
+        vita::core::log::logger::get_instance().error("can not create wbem locator. status=" + std::to_string(status));
+        CoUninitialize();
+        return result;
+    }
+
+    IWbemServices* wbem_services = nullptr;
+    status = wbem_locator->ConnectServer(
+            BSTR(wmi_namespace.c_str()),
+            nullptr,
+            nullptr,
+            nullptr,
+            0,
+            nullptr,
+            nullptr,
+            &wbem_services
+    );
+    if (FAILED(status))
+    {
+        vita::core::log::logger::get_instance().error("can not connect wbem services. status=" + std::to_string(status));
+        wbem_locator->Release();
+        CoUninitialize();
+        return result;
+    }
+
+    status = CoSetProxyBlanket(
+            wbem_services,
+            RPC_C_AUTHN_WINNT,
+            RPC_C_AUTHZ_NONE,
+            nullptr,
+            RPC_C_AUTHN_LEVEL_CALL,
+            RPC_C_IMP_LEVEL_IMPERSONATE,
+            nullptr,
+            EOAC_NONE
+    );
+    if (FAILED(status))
+    {
+        vita::core::log::logger::get_instance().error("can not set proxy blanket. status=" + std::to_string(status));
+        wbem_services->Release();
+        wbem_locator->Release();
+        CoUninitialize();
+        return result;
+    }
+
+    IEnumWbemClassObject* wbem_class_object_enumerator = nullptr;
+    status = wbem_services->ExecQuery(
+            BSTR(wmi_query_language.c_str()),
+            BSTR(wmi_query_string.c_str()),
+            WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+            nullptr,
+            &wbem_class_object_enumerator
+    );
+    if (FAILED(status))
+    {
+        vita::core::log::logger::get_instance().error("can not execute query. status=" + std::to_string(status));
+        wbem_services->Release();
+        wbem_locator->Release();
+        CoUninitialize();
+        return result;
+    }
+
+    IWbemClassObject* wbem_class_object;
+    ULONG returnd = 0;
+    char buf[100];
+    while (wbem_class_object_enumerator)
+    {
+        wbem_class_object_enumerator->Next(
+                WBEM_INFINITE,
+                1,
+                &wbem_class_object,
+                &returnd
+        );
+        if (returnd == 0)
+        {
+            break;
+        }
+
+        VARIANT variant;
+        wbem_class_object->Get(
+                wmi_property_name.c_str(),
+                0,
+                &variant,
+                nullptr,
+                nullptr
+        );
+
+        WideCharToMultiByte(
+                CP_UTF8,
+                0,
+                variant.bstrVal,
+                100,
+                buf,
+                100,
+                nullptr,
+                nullptr
+        );
+        result = buf;
+        VariantClear(&variant);
+        wbem_class_object->Release();
+    }
+
+    wbem_services->Release();
+    wbem_locator->Release();
+    CoUninitialize();
+    return result;
 }
