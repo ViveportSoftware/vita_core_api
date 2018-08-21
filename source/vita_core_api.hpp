@@ -106,6 +106,7 @@ namespace vita
             class VITA_CORE_API_CPP platform
             {
             public:
+                static std::string get_current_executable_version();
                 static std::wstring get_temp_path();
             };
 

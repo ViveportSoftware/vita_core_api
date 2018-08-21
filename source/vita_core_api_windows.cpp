@@ -1,5 +1,6 @@
 #pragma comment(lib, "advapi32.lib")
 #pragma comment(lib, "psapi.lib")
+#pragma comment(lib, "version.lib")
 
 #include <codecvt>
 #include <iostream>
@@ -246,6 +247,44 @@ namespace vita
 
         namespace runtime
         {
+            std::string platform::get_current_executable_version()
+            {
+                std::string result;
+
+                wchar_t file_path[MAX_PATH + 1];
+                GetModuleFileNameW(nullptr, file_path, MAX_PATH + 1);
+
+                DWORD version_handle = 0;
+                const auto version_info_size = GetFileVersionInfoSizeW(file_path, &version_handle);
+                if (version_info_size > 0)
+                {
+                    const auto version_info_data = new char[version_info_size];
+                    if (GetFileVersionInfoW(file_path, version_handle, version_info_size, version_info_data))
+                    {
+                        LPBYTE version_info_buffer = nullptr;
+                        UINT version_info_buffer_size = 0;
+                        if (VerQueryValueW(version_info_data, L"\\", reinterpret_cast<LPVOID*>(&version_info_buffer), &version_info_buffer_size))
+                        {
+                            if (version_info_buffer_size > 0)
+                            {
+                                const auto verson_info = reinterpret_cast<VS_FIXEDFILEINFO *>(version_info_buffer);
+                                char version_buffer[100];
+                                _snprintf_s(version_buffer, 100, "%d.%d.%d.%d",
+                                        (verson_info->dwFileVersionMS >> 16) & 0xffff,
+                                        (verson_info->dwFileVersionMS >> 0) & 0xffff,
+                                        (verson_info->dwFileVersionLS >> 16) & 0xffff,
+                                        (verson_info->dwFileVersionLS >> 0) & 0xffff
+                                );
+                                result = version_buffer;
+                            }
+                        }
+                    }
+                    delete[] version_info_data;
+                }
+
+                return result;
+            }
+
             std::wstring platform::get_temp_path()
             {
                 wchar_t temp_path[MAX_PATH];

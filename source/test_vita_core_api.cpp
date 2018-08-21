@@ -6,6 +6,12 @@
 #include "vita_core_api.h"
 #include "vita_core_api.hpp"
 
+TEST_CASE("File version is set", "[platform]") {
+    const auto version = vita::core::runtime::platform::get_current_executable_version();
+    std::cout << "main executable version: " << version << "\"" << std::endl;
+    REQUIRE(!version.empty());
+}
+
 TEST_CASE("IPC Channel name is set", "[ipcchannel]") {
     const auto pipe_name = "VitaCoreApiIpcChannelTest";
     REQUIRE(vita_core_runtime_ipcchannel_client_set_name(pipe_name));

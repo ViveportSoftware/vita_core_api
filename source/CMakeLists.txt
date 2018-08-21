@@ -88,10 +88,12 @@ if( WIN32 )
   ## Collect all test compile units
   add_executable(
       test_${PROJECT_NAME}
-      ${MY_TEST_SOURCES} )
+      ${MY_TEST_SOURCES}
+      ${MY_VERSION_FILES} )
   add_executable(
       test_${PROJECT_NAME}_static
-      ${MY_TEST_SOURCES} )
+      ${MY_TEST_SOURCES}
+      ${MY_VERSION_FILES} )
 
   ## Set compile-time dependency libraries
   target_link_libraries(
