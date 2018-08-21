@@ -11,6 +11,21 @@
 
 #include "vita_core_api.hpp"
 
+//+ forward declaration
+LONG registry_get_dword_value(
+        HKEY registry_key,
+        const std::wstring& value_name,
+        DWORD& value,
+        DWORD default_value
+);
+LONG registry_get_string_value(
+        HKEY registry_key,
+        const std::wstring& value_name,
+        std::wstring& value,
+        const std::wstring& default_value
+);
+//- forward declaration
+
 namespace vita
 {
     namespace core
@@ -67,16 +82,12 @@ namespace vita
             }
 
             std::wstring config::get(
-                    const std::wstring& key,
+                    const std::wstring& value_name,
                     const std::wstring& default_value) const
             {
                 std::wstring registry_base_key = L"SOFTWARE\\HTC\\Vita\\Config";
-                const DWORD default_registry_value_data_size = 32;
                 std::wstring result;
                 HKEY registry_key;
-                DWORD registry_value_type;
-                auto registry_value_data = new wchar_t[default_registry_value_data_size];
-                DWORD registry_value_data_length = sizeof registry_value_data;
                 auto status = RegOpenKeyExW(
                         HKEY_LOCAL_MACHINE,
                         registry_base_key.c_str(),
@@ -86,32 +97,14 @@ namespace vita
                 );
                 if (status == ERROR_SUCCESS)
                 {
-                    status = RegQueryValueExW(
+                    status = registry_get_string_value(
                             registry_key,
-                            key.c_str(),
-                            nullptr,
-                            &registry_value_type,
-                            reinterpret_cast<LPBYTE>(registry_value_data),
-                            &registry_value_data_length
+                            value_name,
+                            result,
+                            default_value
                     );
-                    if (status == ERROR_MORE_DATA)
+                    if (status == ERROR_SUCCESS)
                     {
-                        delete[] registry_value_data;
-                        registry_value_data = new wchar_t[registry_value_data_length];
-                        status = RegQueryValueExW(
-                                registry_key,
-                                key.c_str(),
-                                nullptr,
-                                &registry_value_type,
-                                reinterpret_cast<LPBYTE>(registry_value_data),
-                                &registry_value_data_length
-                        );
-                    }
-
-                    if (status == ERROR_SUCCESS && registry_value_type == REG_SZ)
-                    {
-                        result.append(registry_value_data);
-                        delete[] registry_value_data;
                         return result;
                     }
                 }
@@ -125,40 +118,18 @@ namespace vita
                 );
                 if (status == ERROR_SUCCESS)
                 {
-                    registry_value_data_length = default_registry_value_data_size;
-                    delete[] registry_value_data;
-                    registry_value_data = new wchar_t[registry_value_data_length];
-                    status = RegQueryValueExW(
+                    status = registry_get_string_value(
                             registry_key,
-                            key.c_str(),
-                            nullptr,
-                            &registry_value_type,
-                            reinterpret_cast<LPBYTE>(registry_value_data),
-                            &registry_value_data_length
+                            value_name,
+                            result,
+                            default_value
                     );
-                    if (status == ERROR_MORE_DATA)
+                    if (status == ERROR_SUCCESS)
                     {
-                        delete[] registry_value_data;
-                        registry_value_data = new wchar_t[registry_value_data_length];
-                        status = RegQueryValueExW(
-                                registry_key,
-                                key.c_str(),
-                                nullptr,
-                                &registry_value_type,
-                                reinterpret_cast<LPBYTE>(registry_value_data),
-                                &registry_value_data_length
-                        );
-                    }
-
-                    if (status == ERROR_SUCCESS && registry_value_type == REG_SZ)
-                    {
-                        result.append(registry_value_data);
-                        delete[] registry_value_data;
                         return result;
                     }
                 }
 
-                delete[] registry_value_data;
                 return default_value;
             }
 
@@ -282,6 +253,112 @@ namespace vita
                         }
                     }
                     delete[] version_info_data;
+                }
+
+                return result;
+            }
+
+            std::string platform::get_os_version()
+            {
+                std::wstring registry_base_key = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+                std::string result;
+                HKEY registry_key;
+                auto status = RegOpenKeyExW(
+                        HKEY_LOCAL_MACHINE,
+                        registry_base_key.c_str(),
+                        0,
+                        KEY_READ | KEY_WOW64_64KEY,
+                        &registry_key
+                );
+                if (status != ERROR_SUCCESS)
+                {
+                    status = RegOpenKeyExW(
+                            HKEY_LOCAL_MACHINE,
+                            registry_base_key.c_str(),
+                            0,
+                            KEY_READ | KEY_WOW64_32KEY,
+                            &registry_key
+                    );
+                }
+                if (status != ERROR_SUCCESS)
+                {
+                    return result;
+                }
+
+                char current_build_number_buffer[100];
+                std::wstring value;
+                registry_get_string_value(
+                        registry_key,
+                        L"CurrentBuildNumber",
+                        value,
+                        L"0"
+                );
+                WideCharToMultiByte(
+                        CP_UTF8,
+                        0,
+                        value.c_str(),
+                        100,
+                        current_build_number_buffer,
+                        100,
+                        nullptr,
+                        nullptr
+                );
+
+                DWORD major_version = 0;
+                DWORD minor_version = 0;
+                registry_get_dword_value(
+                        registry_key,
+                        L"CurrentMajorVersionNumber",
+                        major_version,
+                        0
+                );
+                registry_get_dword_value(
+                        registry_key,
+                        L"CurrentMinorVersionNumber",
+                        minor_version,
+                        0
+                );
+                if (major_version == 0)
+                {
+                    char current_version_buffer[100];
+                    registry_get_string_value(
+                            registry_key,
+                            L"CurrentVersion",
+                            value,
+                            L"0"
+                    );
+                    WideCharToMultiByte(
+                            CP_UTF8,
+                            0,
+                            value.c_str(),
+                            100,
+                            current_version_buffer,
+                            100,
+                            nullptr,
+                            nullptr
+                    );
+                    char version_buffer[100];
+                    snprintf(
+                            version_buffer,
+                            sizeof(version_buffer),
+                            "%s.%s",
+                            current_version_buffer,
+                            current_build_number_buffer
+                    );
+                    result = version_buffer;
+                }
+                else
+                {
+                    char version_buffer[100];
+                    snprintf(
+                            version_buffer,
+                            sizeof(version_buffer),
+                            "%lu.%lu.%s",
+                            major_version,
+                            minor_version,
+                            current_build_number_buffer
+                    );
+                    result = version_buffer;
                 }
 
                 return result;
@@ -571,4 +648,68 @@ namespace vita
             }
         }
     }
+}
+
+LONG registry_get_dword_value(
+        const HKEY registry_key,
+        const std::wstring& value_name,
+        DWORD& value,
+        const DWORD default_value)
+{
+    value = default_value;
+    DWORD registry_value_type;
+    DWORD buffer_size = sizeof(DWORD);
+    DWORD result = 0;
+    const auto status = RegQueryValueExW(
+            registry_key,
+            value_name.c_str(),
+            nullptr,
+            &registry_value_type,
+            reinterpret_cast<LPBYTE>(&result),
+            &buffer_size
+    );
+    if (status == ERROR_SUCCESS && registry_value_type == REG_DWORD)
+    {
+        value = result;
+    }
+    return status;
+}
+
+LONG registry_get_string_value(
+        const HKEY registry_key,
+        const std::wstring& value_name,
+        std::wstring& value,
+        const std::wstring& default_value)
+{
+    value = default_value;
+    const DWORD default_registry_value_data_size = 32;
+    DWORD registry_value_type;
+    auto registry_value_data = new wchar_t[default_registry_value_data_size];
+    DWORD registry_value_data_length = sizeof registry_value_data;
+    auto status = RegQueryValueExW(
+            registry_key,
+            value_name.c_str(),
+            nullptr,
+            &registry_value_type,
+            reinterpret_cast<LPBYTE>(registry_value_data),
+            &registry_value_data_length
+    );
+    if (status == ERROR_MORE_DATA)
+    {
+        delete[] registry_value_data;
+        registry_value_data = new wchar_t[registry_value_data_length];
+        status = RegQueryValueExW(
+                registry_key,
+                value_name.c_str(),
+                nullptr,
+                &registry_value_type,
+                reinterpret_cast<LPBYTE>(registry_value_data),
+                &registry_value_data_length
+        );
+    }
+    if (status == ERROR_SUCCESS && registry_value_type == REG_SZ)
+    {
+        value = registry_value_data;
+    }
+    return status;
 }

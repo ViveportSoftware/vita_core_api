@@ -6,9 +6,15 @@
 #include "vita_core_api.h"
 #include "vita_core_api.hpp"
 
+TEST_CASE("OS version is present", "[platform]") {
+    const auto version = vita::core::runtime::platform::get_os_version();
+    std::cout << "operating system version: \"" << version << "\"" << std::endl;
+    REQUIRE(!version.empty());
+}
+
 TEST_CASE("File version is set", "[platform]") {
     const auto version = vita::core::runtime::platform::get_current_executable_version();
-    std::cout << "main executable version: " << version << "\"" << std::endl;
+    std::cout << "main executable version: \"" << version << "\"" << std::endl;
     REQUIRE(!version.empty());
 }
 
