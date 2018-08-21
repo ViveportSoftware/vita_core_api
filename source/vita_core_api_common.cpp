@@ -1,4 +1,5 @@
 #include <codecvt>
+
 #include "spdlog/spdlog.h"
 #include "vita_core_api.h"
 #include "vita_core_api.hpp"
@@ -125,7 +126,9 @@ namespace vita
 
         namespace util
         {
-            std::string convert::to_hex_string(const unsigned char* input, const size_t size)
+            std::string convert::to_hex_string(
+                    const unsigned char* input,
+                    const size_t size)
             {
                 std::string result;
                 char hex_digits[] = "0123456789abcdef";
