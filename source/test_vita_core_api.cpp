@@ -12,6 +12,12 @@ TEST_CASE("Machine ID is present", "[platform]") {
     REQUIRE(!machine_id.empty());
 }
 
+TEST_CASE("Machine manufacturer is present", "[platform]") {
+    const auto machine_manufacturer = vita::core::runtime::platform::get_machine_manufacturer();
+    std::cout << "machine manufacturer: \"" << machine_manufacturer << "\"" << std::endl;
+    REQUIRE(!machine_manufacturer.empty());
+}
+
 TEST_CASE("Machine serial number is present", "[platform]") {
     const auto machine_serial_number = vita::core::runtime::platform::get_machine_serial_number();
     std::cout << "machine serial number: \"" << machine_serial_number << "\"" << std::endl;

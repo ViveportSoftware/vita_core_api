@@ -30,9 +30,9 @@ LONG registry_get_string_value(
 );
 std::string wmi_get_string_value(
         const std::wstring& wmi_namespace,
-        const std::wstring& wmi_query_language,
-        const std::wstring& wmi_query_string,
-        const std::wstring& wmi_property_name
+        const std::wstring& query_language,
+        const std::wstring& query_string,
+        const std::wstring& property_name
 );
 //- forward declaration
 
@@ -317,6 +317,25 @@ namespace vita
                 return result;
             }
 
+            std::string platform::get_machine_manufacturer()
+            {
+                const std::wstring wmi_namespace = L"root\\cimv2";
+                const std::wstring wmi_query_language = L"WQL";
+                const std::wstring wmi_query_string = L"Select * from Win32_OperatingSystem";
+                const std::wstring wmi_property_name = L"Manufacturer";
+                auto result = wmi_get_string_value(
+                        wmi_namespace,
+                        wmi_query_language,
+                        wmi_query_string,
+                        wmi_property_name
+                );
+                if (result.empty())
+                {
+                    result = "Microsoft Corporation";
+                }
+                return result;
+            }
+
             std::string platform::get_machine_serial_number()
             {
                 const std::wstring wmi_namespace = L"root\\cimv2";
@@ -329,6 +348,10 @@ namespace vita
                         wmi_query_string,
                         wmi_property_name
                 );
+                if (result.empty())
+                {
+                    result = get_machine_id();
+                }
                 return result;
             }
 
@@ -790,9 +813,9 @@ LONG registry_get_string_value(
 
 std::string wmi_get_string_value(
         const std::wstring& wmi_namespace,
-        const std::wstring& wmi_query_language,
-        const std::wstring& wmi_query_string,
-        const std::wstring& wmi_property_name)
+        const std::wstring& query_language,
+        const std::wstring& query_string,
+        const std::wstring& property_name)
 {
     std::string result;
     auto status = CoInitializeEx(
@@ -878,8 +901,8 @@ std::string wmi_get_string_value(
 
     IEnumWbemClassObject* wbem_class_object_enumerator = nullptr;
     status = wbem_services->ExecQuery(
-            BSTR(wmi_query_language.c_str()),
-            BSTR(wmi_query_string.c_str()),
+            BSTR(query_language.c_str()),
+            BSTR(query_string.c_str()),
             WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
             nullptr,
             &wbem_class_object_enumerator
@@ -911,7 +934,7 @@ std::string wmi_get_string_value(
 
         VARIANT variant;
         wbem_class_object->Get(
-                wmi_property_name.c_str(),
+                property_name.c_str(),
                 0,
                 &variant,
                 nullptr,

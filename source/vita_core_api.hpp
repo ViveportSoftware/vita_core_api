@@ -109,6 +109,7 @@ namespace vita
             public:
                 static std::string get_current_executable_version();
                 static std::string get_machine_id();
+                static std::string get_machine_manufacturer();
                 static std::string get_machine_serial_number();
                 static std::string get_os_version();
                 static std::wstring get_temp_path();
