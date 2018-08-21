@@ -1,7 +1,6 @@
 #include <codecvt>
 
 #include "spdlog/spdlog.h"
-#include "vita_core_api.h"
 #include "vita_core_api.hpp"
 
 namespace vita
