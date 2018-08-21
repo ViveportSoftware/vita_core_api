@@ -6,6 +6,12 @@
 #include "vita_core_api.h"
 #include "vita_core_api.hpp"
 
+TEST_CASE("Machine ID is present", "[platform]") {
+    const auto machine_id = vita::core::runtime::platform::get_machine_id();
+    std::cout << "machine id: \"" << machine_id << "\"" << std::endl;
+    REQUIRE(!machine_id.empty());
+}
+
 TEST_CASE("OS version is present", "[platform]") {
     const auto version = vita::core::runtime::platform::get_os_version();
     std::cout << "operating system version: \"" << version << "\"" << std::endl;

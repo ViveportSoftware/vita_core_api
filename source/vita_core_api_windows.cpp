@@ -258,6 +258,55 @@ namespace vita
                 return result;
             }
 
+            std::string platform::get_machine_id()
+            {
+                std::wstring registry_base_key = L"SOFTWARE\\Microsoft\\Cryptography";
+                std::string result;
+                HKEY registry_key;
+                auto status = RegOpenKeyExW(
+                        HKEY_LOCAL_MACHINE,
+                        registry_base_key.c_str(),
+                        0,
+                        KEY_READ | KEY_WOW64_64KEY,
+                        &registry_key
+                );
+                if (status != ERROR_SUCCESS)
+                {
+                    status = RegOpenKeyExW(
+                            HKEY_LOCAL_MACHINE,
+                            registry_base_key.c_str(),
+                            0,
+                            KEY_READ | KEY_WOW64_32KEY,
+                            &registry_key
+                    );
+                }
+                if (status != ERROR_SUCCESS)
+                {
+                    return result;
+                }
+
+                char buffer[100];
+                std::wstring value;
+                registry_get_string_value(
+                        registry_key,
+                        L"MachineGuid",
+                        value,
+                        L"bad"
+                );
+                WideCharToMultiByte(
+                        CP_UTF8,
+                        0,
+                        value.c_str(),
+                        100,
+                        buffer,
+                        100,
+                        nullptr,
+                        nullptr
+                );
+                result.append(buffer);
+                return result;
+            }
+
             std::string platform::get_os_version()
             {
                 std::wstring registry_base_key = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
