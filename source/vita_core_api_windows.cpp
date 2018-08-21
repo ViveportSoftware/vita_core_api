@@ -5,8 +5,10 @@
 #include <codecvt>
 #include <iostream>
 #include <sstream>
+
 #include <windows.h>
 #include <psapi.h>
+
 #include "vita_core_api.hpp"
 
 namespace vita
@@ -75,7 +77,7 @@ namespace vita
                 DWORD registry_value_type;
                 auto registry_value_data = new wchar_t[default_registry_value_data_size];
                 DWORD registry_value_data_length = sizeof registry_value_data;
-                auto status = RegOpenKeyEx(
+                auto status = RegOpenKeyExW(
                         HKEY_LOCAL_MACHINE,
                         registry_base_key.c_str(),
                         0,
@@ -114,7 +116,7 @@ namespace vita
                     }
                 }
 
-                status = RegOpenKeyEx(
+                status = RegOpenKeyExW(
                         HKEY_LOCAL_MACHINE,
                         registry_base_key.c_str(),
                         0,

@@ -34,6 +34,7 @@
 #endif
 
 #include <string>
+
 #include "vita_core_api.h"
 
 namespace vita
