@@ -846,13 +846,13 @@ std::string wmi_get_string_value(
         return result;
     }
 
-    IWbemLocator* wbem_locator = nullptr;
+    IWbemLocator* locator = nullptr;
     status = CoCreateInstance(
             CLSID_WbemLocator,
             nullptr,
             CLSCTX_INPROC_SERVER,
             IID_IWbemLocator,
-            reinterpret_cast<LPVOID*>(&wbem_locator)
+            reinterpret_cast<LPVOID*>(&locator)
     );
     if (FAILED(status))
     {
@@ -861,8 +861,8 @@ std::string wmi_get_string_value(
         return result;
     }
 
-    IWbemServices* wbem_services = nullptr;
-    status = wbem_locator->ConnectServer(
+    IWbemServices* services = nullptr;
+    status = locator->ConnectServer(
             BSTR(wmi_namespace.c_str()),
             nullptr,
             nullptr,
@@ -870,18 +870,18 @@ std::string wmi_get_string_value(
             0,
             nullptr,
             nullptr,
-            &wbem_services
+            &services
     );
     if (FAILED(status))
     {
         vita::core::log::logger::get_instance().error("can not connect wbem services. status=" + std::to_string(status));
-        wbem_locator->Release();
+        locator->Release();
         CoUninitialize();
         return result;
     }
 
     status = CoSetProxyBlanket(
-            wbem_services,
+            services,
             RPC_C_AUTHN_WINNT,
             RPC_C_AUTHZ_NONE,
             nullptr,
@@ -893,38 +893,38 @@ std::string wmi_get_string_value(
     if (FAILED(status))
     {
         vita::core::log::logger::get_instance().error("can not set proxy blanket. status=" + std::to_string(status));
-        wbem_services->Release();
-        wbem_locator->Release();
+        services->Release();
+        locator->Release();
         CoUninitialize();
         return result;
     }
 
-    IEnumWbemClassObject* wbem_class_object_enumerator = nullptr;
-    status = wbem_services->ExecQuery(
+    IEnumWbemClassObject* class_object_enumerator = nullptr;
+    status = services->ExecQuery(
             BSTR(query_language.c_str()),
             BSTR(query_string.c_str()),
             WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
             nullptr,
-            &wbem_class_object_enumerator
+            &class_object_enumerator
     );
     if (FAILED(status))
     {
         vita::core::log::logger::get_instance().error("can not execute query. status=" + std::to_string(status));
-        wbem_services->Release();
-        wbem_locator->Release();
+        services->Release();
+        locator->Release();
         CoUninitialize();
         return result;
     }
 
-    IWbemClassObject* wbem_class_object;
+    IWbemClassObject* class_object;
     ULONG returned = 0;
     char buf[100];
-    while (wbem_class_object_enumerator)
+    while (class_object_enumerator)
     {
-        wbem_class_object_enumerator->Next(
+        class_object_enumerator->Next(
                 WBEM_INFINITE,
                 1,
-                &wbem_class_object,
+                &class_object,
                 &returned
         );
         if (returned == 0)
@@ -933,7 +933,7 @@ std::string wmi_get_string_value(
         }
 
         VARIANT variant;
-        wbem_class_object->Get(
+        class_object->Get(
                 property_name.c_str(),
                 0,
                 &variant,
@@ -953,11 +953,11 @@ std::string wmi_get_string_value(
         );
         result = buf;
         VariantClear(&variant);
-        wbem_class_object->Release();
+        class_object->Release();
     }
 
-    wbem_services->Release();
-    wbem_locator->Release();
+    services->Release();
+    locator->Release();
     CoUninitialize();
     return result;
 }
