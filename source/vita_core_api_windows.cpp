@@ -250,13 +250,13 @@ namespace vita
                         {
                             if (version_info_buffer_size > 0)
                             {
-                                const auto verson_info = reinterpret_cast<VS_FIXEDFILEINFO *>(version_info_buffer);
+                                const auto version_info = reinterpret_cast<VS_FIXEDFILEINFO *>(version_info_buffer);
                                 char version_buffer[100];
                                 _snprintf_s(version_buffer, 100, "%d.%d.%d.%d",
-                                        (verson_info->dwFileVersionMS >> 16) & 0xffff,
-                                        (verson_info->dwFileVersionMS >> 0) & 0xffff,
-                                        (verson_info->dwFileVersionLS >> 16) & 0xffff,
-                                        (verson_info->dwFileVersionLS >> 0) & 0xffff
+                                        (version_info->dwFileVersionMS >> 16) & 0xffff,
+                                        (version_info->dwFileVersionMS >> 0) & 0xffff,
+                                        (version_info->dwFileVersionLS >> 16) & 0xffff,
+                                        (version_info->dwFileVersionLS >> 0) & 0xffff
                                 );
                                 result = version_buffer;
                             }
@@ -824,7 +824,7 @@ std::string wmi_get_string_value(
     );
     if (FAILED(status))
     {
-        vita::core::log::logger::get_instance().error("can not initialize com conponent. status=" + std::to_string(status));
+        vita::core::log::logger::get_instance().error("can not initialize com component. status=" + std::to_string(status));
         return result;
     }
 
@@ -917,7 +917,7 @@ std::string wmi_get_string_value(
     }
 
     IWbemClassObject* wbem_class_object;
-    ULONG returnd = 0;
+    ULONG returned = 0;
     char buf[100];
     while (wbem_class_object_enumerator)
     {
@@ -925,9 +925,9 @@ std::string wmi_get_string_value(
                 WBEM_INFINITE,
                 1,
                 &wbem_class_object,
-                &returnd
+                &returned
         );
-        if (returnd == 0)
+        if (returned == 0)
         {
             break;
         }
