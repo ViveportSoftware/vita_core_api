@@ -107,6 +107,8 @@ namespace vita
             class VITA_CORE_API_CPP platform
             {
             public:
+                static std::wstring get_current_executable_full_path();
+                static std::string get_current_executable_full_path_in_utf8();
                 static std::string get_current_executable_version();
                 static std::string get_machine_id();
                 static std::string get_machine_manufacturer();

@@ -230,6 +230,44 @@ namespace vita
 
         namespace runtime
         {
+            std::wstring platform::get_current_executable_full_path()
+            {
+                wchar_t buffer[MAX_PATH + 1];
+                GetModuleFileName(
+                        nullptr,
+                        buffer,
+                        MAX_PATH + 1
+                );
+
+                std::wstring file_path = buffer;
+                return file_path;
+            }
+
+            std::string platform::get_current_executable_full_path_in_utf8()
+            {
+                wchar_t file_path[MAX_PATH + 1];
+                GetModuleFileName(
+                        nullptr,
+                        file_path,
+                        MAX_PATH + 1
+                );
+
+                char buffer_in_utf8[MAX_PATH * 2 + 2];
+                WideCharToMultiByte(
+                        CP_UTF8,
+                        0,
+                        file_path,
+                        MAX_PATH + 1,
+                        buffer_in_utf8,
+                        MAX_PATH * 2 + 2,
+                        nullptr,
+                        nullptr
+                );
+
+                std::string file_path_in_utf8 = buffer_in_utf8;
+                return file_path_in_utf8;
+            }
+
             std::string platform::get_current_executable_version()
             {
                 std::string result;
