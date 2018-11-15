@@ -2,6 +2,7 @@
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "oleAut32.lib")
 #pragma comment(lib, "psapi.lib")
+#pragma comment(lib, "shlwapi.lib")
 #pragma comment(lib, "version.lib")
 #pragma comment(lib, "wbemuuid.lib")
 
@@ -11,6 +12,7 @@
 
 #include <windows.h>
 #include <psapi.h>
+#include <shlwapi.h>
 #include <wbemidl.h>
 
 #include "vita_core_api.hpp"
@@ -225,6 +227,20 @@ namespace vita
                 }
 
                 return util::convert::to_hex_string(digest, byte_to_write);
+            }
+        }
+
+        namespace io
+        {
+            bool file::exist(const std::wstring& file)
+            {
+                return PathFileExistsW(file.c_str()) != 0;
+            }
+
+            bool file::exist(const std::string& file_in_utf8)
+            {
+                auto file = util::convert::utf8_string_to_wstring(file_in_utf8);
+                return PathFileExistsW(file.c_str()) != 0;
             }
         }
 

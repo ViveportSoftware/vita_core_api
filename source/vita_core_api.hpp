@@ -76,6 +76,16 @@ namespace vita
             };
         }
 
+        namespace io
+        {
+            class VITA_CORE_API_CPP file
+            {
+            public:
+                static bool exist(const std::wstring& file);
+                static bool exist(const std::string& file_in_utf8);
+            };
+        }
+
         namespace log
         {
             class VITA_CORE_API_CPP logger
