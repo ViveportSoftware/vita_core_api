@@ -78,6 +78,13 @@ namespace vita
 
         namespace io
         {
+            class VITA_CORE_API_CPP directory
+            {
+            public:
+                static bool is_valid_and_writable(const std::wstring& path);
+                static bool is_valid_and_writable(const std::string& path_in_utf8);
+            };
+
             class VITA_CORE_API_CPP file
             {
             public:

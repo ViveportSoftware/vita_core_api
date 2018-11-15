@@ -36,11 +36,15 @@ TEST_CASE("File path is present", "[platform]") {
     REQUIRE(!full_path.empty());
     const auto full_path_exist = vita::core::io::file::exist(full_path);
     REQUIRE(full_path_exist);
+    const auto is_valid = vita::core::io::directory::is_valid_and_writable(full_path);
+    REQUIRE(is_valid);
     const auto full_path_in_utf8 = vita::core::runtime::platform::get_current_executable_full_path_in_utf8();
     std::cout << "main executable full path in utf8: \"" << full_path_in_utf8 << "\"" << std::endl;
     REQUIRE(!full_path_in_utf8.empty());
     const auto full_path_in_utf8_exist = vita::core::io::file::exist(full_path_in_utf8);
     REQUIRE(full_path_in_utf8_exist);
+    const auto is_valid_in_utf8 = vita::core::io::directory::is_valid_and_writable(full_path_in_utf8);
+    REQUIRE(is_valid_in_utf8);
 }
 
 TEST_CASE("File version is set", "[platform]") {

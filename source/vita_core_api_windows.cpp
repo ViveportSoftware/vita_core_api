@@ -232,6 +232,19 @@ namespace vita
 
         namespace io
         {
+            bool directory::is_valid_and_writable(const std::wstring& path)
+            {
+                const auto ret = _waccess_s(path.c_str(), /* write */ 2) == 0;
+                return ret;
+            }
+
+            bool directory::is_valid_and_writable(const std::string& path_in_utf8)
+            {
+                auto path = util::convert::utf8_string_to_wstring(path_in_utf8);
+                const auto ret = _waccess_s(path.c_str(), /* write */ 2) == 0;
+                return ret;
+            }
+
             bool file::exist(const std::wstring& file)
             {
                 return PathFileExistsW(file.c_str()) != 0;
