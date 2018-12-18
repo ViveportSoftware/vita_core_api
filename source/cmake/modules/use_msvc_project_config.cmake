@@ -1,5 +1,9 @@
 #
 #
+if( MSVC )
+  string(APPEND CMAKE_CXX_FLAGS " /EHsc")
+endif()
+
 if( BUILD_WITH_SHARED_VCRT )
   ## Presets:
   ##   Use /MD build instead of /MT to be dependent on msvcrtXXX.dll

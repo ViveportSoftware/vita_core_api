@@ -1,4 +1,4 @@
-cmake_minimum_required( VERSION 3.0 )
+cmake_minimum_required( VERSION 3.4 )
 
 ## Dump current settings
 message( "MY_PROJECT_DESC: " ${MY_PROJECT_DESC} )
