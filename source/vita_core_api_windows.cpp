@@ -226,7 +226,10 @@ namespace vita
                     return "";
                 }
 
-                return util::convert::to_hex_string(digest, byte_to_write);
+                return util::convert::to_hex_string(
+                        digest,
+                        byte_to_write
+                );
             }
         }
 
@@ -261,11 +264,12 @@ namespace vita
         {
             std::wstring platform::get_current_executable_full_path()
             {
-                wchar_t buffer[MAX_PATH + 1];
+                const auto file_path_size = MAX_PATH + 1;
+                wchar_t buffer[file_path_size];
                 GetModuleFileName(
                         nullptr,
                         buffer,
-                        MAX_PATH + 1
+                        file_path_size
                 );
 
                 std::wstring file_path = buffer;
@@ -274,35 +278,29 @@ namespace vita
 
             std::string platform::get_current_executable_full_path_in_utf8()
             {
-                wchar_t file_path[MAX_PATH + 1];
-                GetModuleFileName(
+                const auto file_path_size = MAX_PATH + 1;
+                wchar_t file_path[file_path_size];
+                GetModuleFileNameW(
                         nullptr,
                         file_path,
-                        MAX_PATH + 1
+                        file_path_size
                 );
-
-                char buffer_in_utf8[MAX_PATH * 2 + 2];
-                WideCharToMultiByte(
-                        CP_UTF8,
-                        0,
-                        file_path,
-                        MAX_PATH + 1,
-                        buffer_in_utf8,
-                        MAX_PATH * 2 + 2,
-                        nullptr,
-                        nullptr
-                );
-
-                std::string file_path_in_utf8 = buffer_in_utf8;
-                return file_path_in_utf8;
+                const auto file_path_wstring = std::wstring(file_path);
+                auto file_path_string_in_utf8 = util::convert::wstring_to_utf8_string(file_path_wstring);
+                return file_path_string_in_utf8;
             }
 
             std::string platform::get_current_executable_version()
             {
                 std::string result;
 
-                wchar_t file_path[MAX_PATH + 1];
-                GetModuleFileNameW(nullptr, file_path, MAX_PATH + 1);
+                const auto file_path_size = MAX_PATH + 1;
+                wchar_t file_path[file_path_size];
+                GetModuleFileNameW(
+                        nullptr,
+                        file_path,
+                        file_path_size
+                );
 
                 DWORD version_handle = 0;
                 const auto version_info_size = GetFileVersionInfoSizeW(file_path, &version_handle);
@@ -362,7 +360,6 @@ namespace vita
                     return result;
                 }
 
-                char buffer[100];
                 std::wstring value;
                 registry_get_string_value(
                         registry_key,
@@ -370,17 +367,7 @@ namespace vita
                         value,
                         L"bad"
                 );
-                WideCharToMultiByte(
-                        CP_UTF8,
-                        0,
-                        value.c_str(),
-                        100,
-                        buffer,
-                        100,
-                        nullptr,
-                        nullptr
-                );
-                result.append(buffer);
+                result = util::convert::wstring_to_utf8_string(value);
                 return result;
             }
 
@@ -449,7 +436,6 @@ namespace vita
                     return result;
                 }
 
-                char current_build_number_buffer[100];
                 std::wstring value;
                 registry_get_string_value(
                         registry_key,
@@ -457,16 +443,7 @@ namespace vita
                         value,
                         L"0"
                 );
-                WideCharToMultiByte(
-                        CP_UTF8,
-                        0,
-                        value.c_str(),
-                        100,
-                        current_build_number_buffer,
-                        100,
-                        nullptr,
-                        nullptr
-                );
+                auto current_build_number = util::convert::wstring_to_utf8_string(value);
 
                 DWORD major_version = 0;
                 DWORD minor_version = 0;
@@ -484,30 +461,20 @@ namespace vita
                 );
                 if (major_version == 0)
                 {
-                    char current_version_buffer[100];
                     registry_get_string_value(
                             registry_key,
                             L"CurrentVersion",
                             value,
                             L"0"
                     );
-                    WideCharToMultiByte(
-                            CP_UTF8,
-                            0,
-                            value.c_str(),
-                            100,
-                            current_version_buffer,
-                            100,
-                            nullptr,
-                            nullptr
-                    );
+                    auto current_version = util::convert::wstring_to_utf8_string(value);
                     char version_buffer[100];
                     snprintf(
                             version_buffer,
                             sizeof(version_buffer),
                             "%s.%s",
-                            current_version_buffer,
-                            current_build_number_buffer
+                            current_version.c_str(),
+                            current_build_number.c_str()
                     );
                     result = version_buffer;
                 }
@@ -520,7 +487,7 @@ namespace vita
                             "%lu.%lu.%s",
                             major_version,
                             minor_version,
-                            current_build_number_buffer
+                            current_build_number.c_str()
                     );
                     result = version_buffer;
                 }
@@ -530,8 +497,13 @@ namespace vita
 
             std::wstring platform::get_temp_path()
             {
-                wchar_t temp_path[MAX_PATH];
-                const auto size = GetEnvironmentVariableW(L"TEMP", temp_path, sizeof temp_path);
+                const auto file_path_size = MAX_PATH + 1;
+                wchar_t temp_path[file_path_size];
+                const auto size = GetEnvironmentVariableW(
+                        L"TEMP",
+                        temp_path,
+                        sizeof temp_path
+                );
                 if (size <= 0)
                 {
                     return std::wstring(L"");
@@ -797,7 +769,8 @@ namespace vita
             std::wstring processmanager::get_current_process_name()
             {
                 const auto process_handle = GetCurrentProcess();
-                wchar_t file_name[MAX_PATH];
+                const auto file_path_size = MAX_PATH + 1;
+                wchar_t file_name[file_path_size];
                 const auto size = GetModuleBaseNameW(
                         process_handle,
                         nullptr,
@@ -985,7 +958,6 @@ std::string wmi_get_string_value(
 
     IWbemClassObject* class_object;
     ULONG returned = 0;
-    char buf[100];
     while (class_object_enumerator)
     {
         class_object_enumerator->Next(
@@ -1008,17 +980,9 @@ std::string wmi_get_string_value(
                 nullptr
         );
 
-        WideCharToMultiByte(
-                CP_UTF8,
-                0,
-                variant.bstrVal,
-                100,
-                buf,
-                100,
-                nullptr,
-                nullptr
-        );
-        result = buf;
+        auto temp_in_bstr = variant.bstrVal;
+        std::wstring temp(temp_in_bstr, SysStringLen(temp_in_bstr));
+        result = vita::core::util::convert::wstring_to_utf8_string(temp);
         VariantClear(&variant);
         class_object->Release();
     }
