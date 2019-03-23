@@ -1,6 +1,7 @@
 #include <codecvt>
 
 #include "spdlog/spdlog.h"
+#include "spdlog/sinks/rotating_file_sink.h"
 #include "vita_core_api.hpp"
 
 namespace vita
@@ -105,7 +106,7 @@ namespace vita
                         instance.impl_->internal_logger->set_level(spdlog::level::info);
                     }
 
-                    instance.impl_->internal_logger->critical("==== log level: " + std::string(to_str(instance.impl_->internal_logger->level())) + " ====");
+                    instance.impl_->internal_logger->critical("==== log level: " + std::string(to_short_c_str(instance.impl_->internal_logger->level())) + " ====");
                     instance.impl_->internal_logger->info("process id: " + std::to_string(process_id));
                     instance.impl_->internal_logger->info("process name: " + util::convert::wstring_to_utf8_string(process_name));
                 }
