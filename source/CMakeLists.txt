@@ -55,10 +55,13 @@ if( WIN32 )
       ORIGINAL_FILENAME "${PROJECT_NAME}${MY_PROJECT_SUFFIX}.dll" )
 
   ## Add additional definitions
-  add_definitions( -D_UNICODE -DPSAPI_VERSION=1 )
+  add_definitions(
+      -D_UNICODE
+      -DPSAPI_VERSION=1 )
 
   ## Add additional definitions for spdlog
-  add_definitions( -DSPDLOG_WCHAR_FILENAMES )
+  add_definitions(
+      -DSPDLOG_WCHAR_FILENAMES )
 
   ## Collect all project compile units
   add_library(
