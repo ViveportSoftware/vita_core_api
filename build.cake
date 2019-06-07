@@ -1,4 +1,4 @@
-#addin "nuget:?package=Cake.Git&version=0.16.0"
+#addin "nuget:?package=Cake.Git&version=0.19.0"
 #addin "nuget:?package=Cake.CMake&version=0.2.2"
 
 //////////////////////////////////////////////////////////////////////
@@ -8,6 +8,7 @@
 var configuration = Argument("configuration", "Debug");
 var revision = EnvironmentVariable("BUILD_NUMBER") ?? Argument("revision", "9999");
 var target = Argument("target", "Default");
+var cmakeMsbuild = EnvironmentVariable("CMAKE_MSBUILD") ?? "default";
 var cmakeToolset = EnvironmentVariable("CMAKE_TOOLSET") ?? "v141";
 var cmakeWithSharedVcrt = EnvironmentVariable("CMAKE_WITH_SHARED_VCRT") ?? "OFF";
 var cmakeWithStaticVcrt = EnvironmentVariable("CMAKE_WITH_STATIC_VCRT") ?? "ON";
@@ -110,6 +111,11 @@ Task("Display-Config")
     {
         Information("Build version: {0}-CI{1}", ciVersion, revision);
     }
+    if("vs2019".Equals(cmakeMsbuild))
+    {
+        msbuildSettings.ToolVersion = MSBuildToolVersion.VS2019;
+    }
+    Information("Build using MSBuild version: {0}", msbuildSettings.ToolVersion);
 });
 
 Task("Clean-Workspace")
@@ -149,7 +155,7 @@ Task("Build-Binary-Win32")
 });
 
 Task("Build-Binary-ARM")
-    .WithCriteria(() => "v140".Equals(cmakeToolset) || "v141".Equals(cmakeToolset))
+    .WithCriteria(() => "v140".Equals(cmakeToolset) || "v141".Equals(cmakeToolset) || "v142".Equals(cmakeToolset))
     .IsDependentOn("Build-Binary-Win32")
     .Does(() =>
 {
@@ -178,7 +184,7 @@ Task("Build-Binary-ARM")
 });
 
 Task("Build-Binary-x64")
-    .WithCriteria(() => "v140".Equals(cmakeToolset) || "v141".Equals(cmakeToolset))
+    .WithCriteria(() => "v140".Equals(cmakeToolset) || "v141".Equals(cmakeToolset) || "v142".Equals(cmakeToolset))
     .IsDependentOn("Build-Binary-ARM")
     .Does(() =>
 {
@@ -208,7 +214,7 @@ Task("Build-Binary-x64")
 });
 
 Task("Build-Binary-ARM64")
-    .WithCriteria(() => "v141".Equals(cmakeToolset))
+    .WithCriteria(() => "v141".Equals(cmakeToolset) || "v142".Equals(cmakeToolset))
     .IsDependentOn("Build-Binary-x64")
     .Does(() =>
 {
