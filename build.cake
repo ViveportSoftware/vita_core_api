@@ -8,7 +8,6 @@
 var configuration = Argument("configuration", "Debug");
 var revision = EnvironmentVariable("BUILD_NUMBER") ?? Argument("revision", "9999");
 var target = Argument("target", "Default");
-var cmakeMsbuild = EnvironmentVariable("CMAKE_MSBUILD") ?? "default";
 var cmakeToolset = EnvironmentVariable("CMAKE_TOOLSET") ?? "v141";
 var cmakeWithArmBinary = EnvironmentVariable("CMAKE_WITH_ARM_BINARY") ?? "ON";
 var cmakeWithSharedVcrt = EnvironmentVariable("CMAKE_WITH_SHARED_VCRT") ?? "OFF";
@@ -112,11 +111,6 @@ Task("Display-Config")
     {
         Information("Build version: {0}-CI{1}", ciVersion, revision);
     }
-    if("vs2019".Equals(cmakeMsbuild))
-    {
-        msbuildSettings.ToolVersion = MSBuildToolVersion.VS2019;
-    }
-    Information("Build using MSBuild version: {0}", msbuildSettings.ToolVersion);
 });
 
 Task("Clean-Workspace")
