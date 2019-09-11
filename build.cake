@@ -1,5 +1,5 @@
 #addin "nuget:?package=Cake.Git&version=0.21.0"
-#addin "nuget:?package=Cake.CMake&version=0.2.2"
+#addin "nuget:?package=Cake.CMake&version=1.1.2"
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
