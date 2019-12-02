@@ -121,19 +121,6 @@ namespace vita
 
         namespace runtime
         {
-            class VITA_CORE_API_CPP platform
-            {
-            public:
-                static std::wstring get_current_executable_full_path();
-                static std::string get_current_executable_full_path_in_utf8();
-                static std::string get_current_executable_version();
-                static std::string get_machine_id();
-                static std::string get_machine_manufacturer();
-                static std::string get_machine_serial_number();
-                static std::string get_os_version();
-                static std::wstring get_temp_path();
-            };
-
             namespace ipcchannel
             {
                 class VITA_CORE_API_CPP client : public ivita_core_runtime_ipcchannel_client
@@ -158,6 +145,19 @@ namespace vita
                     impl* impl_;
                 };
             }
+
+            class VITA_CORE_API_CPP platform
+            {
+            public:
+                static std::wstring get_current_executable_full_path();
+                static std::string get_current_executable_full_path_in_utf8();
+                static std::string get_current_executable_version();
+                static std::string get_machine_id();
+                static std::string get_machine_manufacturer();
+                static std::string get_machine_serial_number();
+                static std::string get_os_version();
+                static std::wstring get_temp_path();
+            };
 
             class VITA_CORE_API_CPP processmanager
             {

@@ -262,255 +262,6 @@ namespace vita
 
         namespace runtime
         {
-            std::wstring platform::get_current_executable_full_path()
-            {
-                const auto file_path_size = MAX_PATH + 1;
-                wchar_t buffer[file_path_size];
-                GetModuleFileName(
-                        nullptr,
-                        buffer,
-                        file_path_size
-                );
-
-                std::wstring file_path = buffer;
-                return file_path;
-            }
-
-            std::string platform::get_current_executable_full_path_in_utf8()
-            {
-                const auto file_path_size = MAX_PATH + 1;
-                wchar_t file_path[file_path_size];
-                GetModuleFileNameW(
-                        nullptr,
-                        file_path,
-                        file_path_size
-                );
-                const auto file_path_wstring = std::wstring(file_path);
-                auto file_path_string_in_utf8 = util::convert::wstring_to_utf8_string(file_path_wstring);
-                return file_path_string_in_utf8;
-            }
-
-            std::string platform::get_current_executable_version()
-            {
-                std::string result;
-
-                const auto file_path_size = MAX_PATH + 1;
-                wchar_t file_path[file_path_size];
-                GetModuleFileNameW(
-                        nullptr,
-                        file_path,
-                        file_path_size
-                );
-
-                DWORD version_handle = 0;
-                const auto version_info_size = GetFileVersionInfoSizeW(file_path, &version_handle);
-                if (version_info_size > 0)
-                {
-                    const auto version_info_data = new char[version_info_size];
-                    if (GetFileVersionInfoW(file_path, version_handle, version_info_size, version_info_data))
-                    {
-                        LPBYTE version_info_buffer = nullptr;
-                        UINT version_info_buffer_size = 0;
-                        if (VerQueryValueW(version_info_data, L"\\", reinterpret_cast<LPVOID*>(&version_info_buffer), &version_info_buffer_size))
-                        {
-                            if (version_info_buffer_size > 0)
-                            {
-                                const auto version_info = reinterpret_cast<VS_FIXEDFILEINFO *>(version_info_buffer);
-                                char version_buffer[100];
-                                _snprintf_s(version_buffer, 100, "%d.%d.%d.%d",
-                                        (version_info->dwFileVersionMS >> 16) & 0xffff,
-                                        (version_info->dwFileVersionMS >> 0) & 0xffff,
-                                        (version_info->dwFileVersionLS >> 16) & 0xffff,
-                                        (version_info->dwFileVersionLS >> 0) & 0xffff
-                                );
-                                result = version_buffer;
-                            }
-                        }
-                    }
-                    delete[] version_info_data;
-                }
-
-                return result;
-            }
-
-            std::string platform::get_machine_id()
-            {
-                std::wstring registry_base_key = L"SOFTWARE\\Microsoft\\Cryptography";
-                std::string result;
-                HKEY registry_key;
-                auto status = RegOpenKeyExW(
-                        HKEY_LOCAL_MACHINE,
-                        registry_base_key.c_str(),
-                        0,
-                        KEY_READ | KEY_WOW64_64KEY,
-                        &registry_key
-                );
-                if (status != ERROR_SUCCESS)
-                {
-                    status = RegOpenKeyExW(
-                            HKEY_LOCAL_MACHINE,
-                            registry_base_key.c_str(),
-                            0,
-                            KEY_READ | KEY_WOW64_32KEY,
-                            &registry_key
-                    );
-                }
-                if (status != ERROR_SUCCESS)
-                {
-                    return result;
-                }
-
-                std::wstring value;
-                registry_get_string_value(
-                        registry_key,
-                        L"MachineGuid",
-                        value,
-                        L"bad"
-                );
-                result = util::convert::wstring_to_utf8_string(value);
-                return result;
-            }
-
-            std::string platform::get_machine_manufacturer()
-            {
-                const std::wstring wmi_namespace = L"root\\cimv2";
-                const std::wstring wmi_query_language = L"WQL";
-                const std::wstring wmi_query_string = L"Select * from Win32_OperatingSystem";
-                const std::wstring wmi_property_name = L"Manufacturer";
-                auto result = wmi_get_string_value(
-                        wmi_namespace,
-                        wmi_query_language,
-                        wmi_query_string,
-                        wmi_property_name
-                );
-                if (result.empty())
-                {
-                    result = "Microsoft Corporation";
-                }
-                return result;
-            }
-
-            std::string platform::get_machine_serial_number()
-            {
-                const std::wstring wmi_namespace = L"root\\cimv2";
-                const std::wstring wmi_query_language = L"WQL";
-                const std::wstring wmi_query_string = L"SELECT * FROM Win32_ComputerSystemProduct";
-                const std::wstring wmi_property_name = L"UUID";
-                auto result = wmi_get_string_value(
-                        wmi_namespace,
-                        wmi_query_language,
-                        wmi_query_string,
-                        wmi_property_name
-                );
-                if (result.empty())
-                {
-                    result = get_machine_id();
-                }
-                return result;
-            }
-
-            std::string platform::get_os_version()
-            {
-                std::wstring registry_base_key = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
-                std::string result;
-                HKEY registry_key;
-                auto status = RegOpenKeyExW(
-                        HKEY_LOCAL_MACHINE,
-                        registry_base_key.c_str(),
-                        0,
-                        KEY_READ | KEY_WOW64_64KEY,
-                        &registry_key
-                );
-                if (status != ERROR_SUCCESS)
-                {
-                    status = RegOpenKeyExW(
-                            HKEY_LOCAL_MACHINE,
-                            registry_base_key.c_str(),
-                            0,
-                            KEY_READ | KEY_WOW64_32KEY,
-                            &registry_key
-                    );
-                }
-                if (status != ERROR_SUCCESS)
-                {
-                    return result;
-                }
-
-                std::wstring value;
-                registry_get_string_value(
-                        registry_key,
-                        L"CurrentBuildNumber",
-                        value,
-                        L"0"
-                );
-                auto current_build_number = util::convert::wstring_to_utf8_string(value);
-
-                DWORD major_version = 0;
-                DWORD minor_version = 0;
-                registry_get_dword_value(
-                        registry_key,
-                        L"CurrentMajorVersionNumber",
-                        major_version,
-                        0
-                );
-                registry_get_dword_value(
-                        registry_key,
-                        L"CurrentMinorVersionNumber",
-                        minor_version,
-                        0
-                );
-                if (major_version == 0)
-                {
-                    registry_get_string_value(
-                            registry_key,
-                            L"CurrentVersion",
-                            value,
-                            L"0"
-                    );
-                    auto current_version = util::convert::wstring_to_utf8_string(value);
-                    char version_buffer[100];
-                    snprintf(
-                            version_buffer,
-                            sizeof(version_buffer),
-                            "%s.%s",
-                            current_version.c_str(),
-                            current_build_number.c_str()
-                    );
-                    result = version_buffer;
-                }
-                else
-                {
-                    char version_buffer[100];
-                    snprintf(
-                            version_buffer,
-                            sizeof(version_buffer),
-                            "%lu.%lu.%s",
-                            major_version,
-                            minor_version,
-                            current_build_number.c_str()
-                    );
-                    result = version_buffer;
-                }
-
-                return result;
-            }
-
-            std::wstring platform::get_temp_path()
-            {
-                const auto file_path_size = MAX_PATH + 1;
-                wchar_t temp_path[file_path_size];
-                const auto size = GetEnvironmentVariableW(
-                        L"TEMP",
-                        temp_path,
-                        sizeof temp_path
-                );
-                if (size <= 0)
-                {
-                    return std::wstring(L"");
-                }
-                return std::wstring(temp_path, size);
-            }
-
             namespace ipcchannel
             {
                 class client::impl
@@ -759,6 +510,255 @@ namespace vita
                     const auto name_in_hex = crypto::sha1::generate_from_utf8_string_in_hex(name);
                     return impl_->set_name(R"(\\.\pipe\)" + name_in_hex);
                 }
+            }
+
+            std::wstring platform::get_current_executable_full_path()
+            {
+                const auto file_path_size = MAX_PATH + 1;
+                wchar_t buffer[file_path_size];
+                GetModuleFileName(
+                        nullptr,
+                        buffer,
+                        file_path_size
+                );
+
+                std::wstring file_path = buffer;
+                return file_path;
+            }
+
+            std::string platform::get_current_executable_full_path_in_utf8()
+            {
+                const auto file_path_size = MAX_PATH + 1;
+                wchar_t file_path[file_path_size];
+                GetModuleFileNameW(
+                        nullptr,
+                        file_path,
+                        file_path_size
+                );
+                const auto file_path_wstring = std::wstring(file_path);
+                auto file_path_string_in_utf8 = util::convert::wstring_to_utf8_string(file_path_wstring);
+                return file_path_string_in_utf8;
+            }
+
+            std::string platform::get_current_executable_version()
+            {
+                std::string result;
+
+                const auto file_path_size = MAX_PATH + 1;
+                wchar_t file_path[file_path_size];
+                GetModuleFileNameW(
+                        nullptr,
+                        file_path,
+                        file_path_size
+                );
+
+                DWORD version_handle = 0;
+                const auto version_info_size = GetFileVersionInfoSizeW(file_path, &version_handle);
+                if (version_info_size > 0)
+                {
+                    const auto version_info_data = new char[version_info_size];
+                    if (GetFileVersionInfoW(file_path, version_handle, version_info_size, version_info_data))
+                    {
+                        LPBYTE version_info_buffer = nullptr;
+                        UINT version_info_buffer_size = 0;
+                        if (VerQueryValueW(version_info_data, L"\\", reinterpret_cast<LPVOID*>(&version_info_buffer), &version_info_buffer_size))
+                        {
+                            if (version_info_buffer_size > 0)
+                            {
+                                const auto version_info = reinterpret_cast<VS_FIXEDFILEINFO *>(version_info_buffer);
+                                char version_buffer[100];
+                                _snprintf_s(version_buffer, 100, "%d.%d.%d.%d",
+                                        (version_info->dwFileVersionMS >> 16) & 0xffff,
+                                        (version_info->dwFileVersionMS >> 0) & 0xffff,
+                                        (version_info->dwFileVersionLS >> 16) & 0xffff,
+                                        (version_info->dwFileVersionLS >> 0) & 0xffff
+                                );
+                                result = version_buffer;
+                            }
+                        }
+                    }
+                    delete[] version_info_data;
+                }
+
+                return result;
+            }
+
+            std::string platform::get_machine_id()
+            {
+                std::wstring registry_base_key = L"SOFTWARE\\Microsoft\\Cryptography";
+                std::string result;
+                HKEY registry_key;
+                auto status = RegOpenKeyExW(
+                        HKEY_LOCAL_MACHINE,
+                        registry_base_key.c_str(),
+                        0,
+                        KEY_READ | KEY_WOW64_64KEY,
+                        &registry_key
+                );
+                if (status != ERROR_SUCCESS)
+                {
+                    status = RegOpenKeyExW(
+                            HKEY_LOCAL_MACHINE,
+                            registry_base_key.c_str(),
+                            0,
+                            KEY_READ | KEY_WOW64_32KEY,
+                            &registry_key
+                    );
+                }
+                if (status != ERROR_SUCCESS)
+                {
+                    return result;
+                }
+
+                std::wstring value;
+                registry_get_string_value(
+                        registry_key,
+                        L"MachineGuid",
+                        value,
+                        L"bad"
+                );
+                result = util::convert::wstring_to_utf8_string(value);
+                return result;
+            }
+
+            std::string platform::get_machine_manufacturer()
+            {
+                const std::wstring wmi_namespace = L"root\\cimv2";
+                const std::wstring wmi_query_language = L"WQL";
+                const std::wstring wmi_query_string = L"Select * from Win32_OperatingSystem";
+                const std::wstring wmi_property_name = L"Manufacturer";
+                auto result = wmi_get_string_value(
+                        wmi_namespace,
+                        wmi_query_language,
+                        wmi_query_string,
+                        wmi_property_name
+                );
+                if (result.empty())
+                {
+                    result = "Microsoft Corporation";
+                }
+                return result;
+            }
+
+            std::string platform::get_machine_serial_number()
+            {
+                const std::wstring wmi_namespace = L"root\\cimv2";
+                const std::wstring wmi_query_language = L"WQL";
+                const std::wstring wmi_query_string = L"SELECT * FROM Win32_ComputerSystemProduct";
+                const std::wstring wmi_property_name = L"UUID";
+                auto result = wmi_get_string_value(
+                        wmi_namespace,
+                        wmi_query_language,
+                        wmi_query_string,
+                        wmi_property_name
+                );
+                if (result.empty())
+                {
+                    result = get_machine_id();
+                }
+                return result;
+            }
+
+            std::string platform::get_os_version()
+            {
+                std::wstring registry_base_key = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+                std::string result;
+                HKEY registry_key;
+                auto status = RegOpenKeyExW(
+                        HKEY_LOCAL_MACHINE,
+                        registry_base_key.c_str(),
+                        0,
+                        KEY_READ | KEY_WOW64_64KEY,
+                        &registry_key
+                );
+                if (status != ERROR_SUCCESS)
+                {
+                    status = RegOpenKeyExW(
+                            HKEY_LOCAL_MACHINE,
+                            registry_base_key.c_str(),
+                            0,
+                            KEY_READ | KEY_WOW64_32KEY,
+                            &registry_key
+                    );
+                }
+                if (status != ERROR_SUCCESS)
+                {
+                    return result;
+                }
+
+                std::wstring value;
+                registry_get_string_value(
+                        registry_key,
+                        L"CurrentBuildNumber",
+                        value,
+                        L"0"
+                );
+                auto current_build_number = util::convert::wstring_to_utf8_string(value);
+
+                DWORD major_version = 0;
+                DWORD minor_version = 0;
+                registry_get_dword_value(
+                        registry_key,
+                        L"CurrentMajorVersionNumber",
+                        major_version,
+                        0
+                );
+                registry_get_dword_value(
+                        registry_key,
+                        L"CurrentMinorVersionNumber",
+                        minor_version,
+                        0
+                );
+                if (major_version == 0)
+                {
+                    registry_get_string_value(
+                            registry_key,
+                            L"CurrentVersion",
+                            value,
+                            L"0"
+                    );
+                    auto current_version = util::convert::wstring_to_utf8_string(value);
+                    char version_buffer[100];
+                    snprintf(
+                            version_buffer,
+                            sizeof(version_buffer),
+                            "%s.%s",
+                            current_version.c_str(),
+                            current_build_number.c_str()
+                    );
+                    result = version_buffer;
+                }
+                else
+                {
+                    char version_buffer[100];
+                    snprintf(
+                            version_buffer,
+                            sizeof(version_buffer),
+                            "%lu.%lu.%s",
+                            major_version,
+                            minor_version,
+                            current_build_number.c_str()
+                    );
+                    result = version_buffer;
+                }
+
+                return result;
+            }
+
+            std::wstring platform::get_temp_path()
+            {
+                const auto file_path_size = MAX_PATH + 1;
+                wchar_t temp_path[file_path_size];
+                const auto size = GetEnvironmentVariableW(
+                        L"TEMP",
+                        temp_path,
+                        sizeof temp_path
+                );
+                if (size <= 0)
+                {
+                    return std::wstring(L"");
+                }
+                return std::wstring(temp_path, size);
             }
 
             unsigned int processmanager::get_current_process_id()
