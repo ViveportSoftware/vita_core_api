@@ -8,6 +8,7 @@
 
 #include <codecvt>
 #include <iostream>
+#include <mutex>
 #include <sstream>
 
 #include <windows.h>
@@ -280,10 +281,18 @@ namespace vita
 
                 bool client::impl::set_name(const std::string& name)
                 {
+                    static std::mutex name_mutex;
                     if (!name.empty())
                     {
                         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-                        this->name.assign(converter.from_bytes(name));
+                        name_mutex.lock();
+                        const auto new_name = std::wstring(converter.from_bytes(name));
+                        if (this->name.compare(new_name) != 0)
+                        {
+                            log::logger::get_instance().debug("Try to set real channel name to " + name);
+                            this->name.assign(new_name);
+                        }
+                        name_mutex.unlock();
                     }
                     return true;
                 }
