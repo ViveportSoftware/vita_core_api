@@ -369,6 +369,7 @@ namespace vita
                     if (!WaitNamedPipeW(pipe_name.c_str(), 100))
                     {
                         log::logger::get_instance().error("can not open pipe in wait timeout. GLE=" + std::to_string(GetLastError()));
+                        CloseHandle(pipe_handle);
                         return false;
                     }
 
