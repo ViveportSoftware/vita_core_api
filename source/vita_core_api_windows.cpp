@@ -98,7 +98,7 @@ namespace vita
                     const std::wstring& value_name,
                     const std::wstring& default_value) const
             {
-                std::wstring registry_base_key = L"SOFTWARE\\HTC\\Vita\\Config";
+                const std::wstring registry_base_key = L"SOFTWARE\\HTC\\Vita\\Config";
                 std::wstring result;
                 HKEY registry_key;
                 auto status = RegOpenKeyExW(
@@ -244,7 +244,7 @@ namespace vita
 
             bool directory::is_valid_and_writable(const std::string& path_in_utf8)
             {
-                auto path = util::convert::utf8_string_to_wstring(path_in_utf8);
+                const auto path = util::convert::utf8_string_to_wstring(path_in_utf8);
                 const auto ret = _waccess_s(path.c_str(), /* write */ 2) == 0;
                 return ret;
             }
@@ -256,7 +256,7 @@ namespace vita
 
             bool file::exist(const std::string& file_in_utf8)
             {
-                auto file = util::convert::utf8_string_to_wstring(file_in_utf8);
+                const auto file = util::convert::utf8_string_to_wstring(file_in_utf8);
                 return PathFileExistsW(file.c_str()) != 0;
             }
         }
@@ -386,7 +386,7 @@ namespace vita
                         return false;
                     }
 
-                    auto utf8_input = util::convert::wstring_to_utf8_string(L"");
+                    const auto utf8_input = util::convert::wstring_to_utf8_string(L"");
                     const auto message_to_send = utf8_input.c_str();
                     const auto bytes_to_write = static_cast<DWORD>((std::strlen(message_to_send) + 1) * sizeof(char));  // NOLINT
 
@@ -468,7 +468,7 @@ namespace vita
                         return L"";
                     }
 
-                    auto utf8_input = util::convert::wstring_to_utf8_string(input);
+                    const auto utf8_input = util::convert::wstring_to_utf8_string(input);
                     const auto message_to_send = utf8_input.c_str();
                     const auto bytes_to_write = static_cast<DWORD>((std::strlen(message_to_send) + 1) * sizeof(char));  // NOLINT
 
@@ -594,7 +594,7 @@ namespace vita
 
             std::string platform::get_machine_id()
             {
-                std::wstring registry_base_key = L"SOFTWARE\\Microsoft\\Cryptography";
+                const std::wstring registry_base_key = L"SOFTWARE\\Microsoft\\Cryptography";
                 std::string result;
                 HKEY registry_key;
                 auto status = RegOpenKeyExW(
@@ -670,7 +670,7 @@ namespace vita
 
             std::string platform::get_os_version()
             {
-                std::wstring registry_base_key = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+                const std::wstring registry_base_key = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
                 std::string result;
                 HKEY registry_key;
                 auto status = RegOpenKeyExW(
@@ -702,7 +702,7 @@ namespace vita
                         value,
                         L"0"
                 );
-                auto current_build_number = util::convert::wstring_to_utf8_string(value);
+                const auto current_build_number = util::convert::wstring_to_utf8_string(value);
 
                 DWORD major_version = 0;
                 DWORD minor_version = 0;
@@ -726,7 +726,7 @@ namespace vita
                             value,
                             L"0"
                     );
-                    auto current_version = util::convert::wstring_to_utf8_string(value);
+                    const auto current_version = util::convert::wstring_to_utf8_string(value);
                     char version_buffer[100];
                     snprintf(
                             version_buffer,

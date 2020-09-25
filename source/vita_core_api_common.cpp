@@ -76,19 +76,21 @@ namespace vita
                 static logger instance;
                 if (instance.impl_->internal_logger == nullptr)
                 {
+                    const std::string logger_name = "vita_core_api";
                     const auto process_id = runtime::processmanager::get_current_process_id();
                     const auto process_name = runtime::processmanager::get_current_process_name();
                     const auto log_dir_path = runtime::platform::get_temp_path();
-                    const auto log_file_name = L"vita_core_api-" + std::to_wstring(process_id) + L"_" + process_name + L".log";
+                    const auto log_file_name_prefix = util::convert::utf8_string_to_wstring(logger_name);
+                    const auto log_file_name = log_file_name_prefix + L"-" + std::to_wstring(process_id) + L"_" + process_name + L".log";
                     const auto log_path = log_dir_path + L"\\" + log_file_name;
                     instance.impl_->internal_logger = spdlog::rotating_logger_mt(
-                            "vita_core_api",
+                            logger_name,
                             log_path,
                             1048576 * 5,
                             3
                     );
 
-                    const auto log_level = config::config::get_instance().get(L"vita_core_api-" + process_name, L"");
+                    const auto log_level = config::config::get_instance().get(log_file_name_prefix + L"-" + process_name, L"");
                     if (log_level == L"critical")
                     {
                         instance.impl_->internal_logger->set_level(spdlog::level::critical);
