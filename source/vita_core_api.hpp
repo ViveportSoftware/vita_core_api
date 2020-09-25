@@ -181,4 +181,14 @@ namespace vita
             };
         }
     }
+
+    namespace internal
+    {
+        class VITA_CORE_API_CPP binary
+        {
+        public:
+            static std::string get_arch();
+            static std::string get_version();
+        };
+    }
 }

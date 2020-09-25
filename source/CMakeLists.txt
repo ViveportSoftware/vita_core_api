@@ -34,7 +34,8 @@ if( WIN32 )
   include( use_msvc_project_config )
 
   include_directories(
-      ${CMAKE_SOURCE_DIR}/external )
+      ${CMAKE_SOURCE_DIR}/external
+      ${CMAKE_CURRENT_BINARY_DIR} )
 
   ## Set project sources
   set( MY_PROJECT_HEADERS
@@ -42,7 +43,8 @@ if( WIN32 )
       vita_core_api.hpp )
   set( MY_PROJECT_SOURCES
       vita_core_api_common.cpp
-      vita_core_api_windows.cpp )
+      vita_core_api_windows.cpp
+      vita_internal_windows.cpp )
 
   ## Set dll options
   include( generate_product_dll_version )

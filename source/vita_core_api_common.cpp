@@ -79,6 +79,8 @@ namespace vita
                     const std::string logger_name = "vita_core_api";
                     const auto process_id = runtime::processmanager::get_current_process_id();
                     const auto process_name = runtime::processmanager::get_current_process_name();
+                    const auto binary_arch = internal::binary::get_arch();
+                    const auto binary_version = internal::binary::get_version();
                     const auto log_dir_path = runtime::platform::get_temp_path();
                     const auto log_file_name_prefix = util::convert::utf8_string_to_wstring(logger_name);
                     const auto log_file_name = log_file_name_prefix + L"-" + std::to_wstring(process_id) + L"_" + process_name + L".log";
@@ -111,6 +113,8 @@ namespace vita
                     instance.impl_->internal_logger->critical("==== log level: " + std::string(to_short_c_str(instance.impl_->internal_logger->level())) + " ====");
                     instance.impl_->internal_logger->info("process id: " + std::to_string(process_id));
                     instance.impl_->internal_logger->info("process name: " + util::convert::wstring_to_utf8_string(process_name));
+                    instance.impl_->internal_logger->info("library architecture: " + binary_arch);
+                    instance.impl_->internal_logger->info("library version: " + binary_version);
                 }
                 return instance;
             }
