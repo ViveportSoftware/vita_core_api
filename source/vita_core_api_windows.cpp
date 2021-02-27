@@ -268,31 +268,31 @@ namespace vita
                 class client::impl
                 {
                 public:
-                    std::wstring get_wide_name() const;
-                    bool set_name(const std::string& name);
+                    std::wstring get_wide_channel_name() const;
+                    bool set_channel_name(const std::string& channel_name);
 
-                    std::wstring name;
+                    std::wstring channel_name;
                 };
 
-                std::wstring client::impl::get_wide_name() const
+                std::wstring client::impl::get_wide_channel_name() const
                 {
-                    return name;
+                    return channel_name;
                 }
 
-                bool client::impl::set_name(const std::string& name)
+                bool client::impl::set_channel_name(const std::string& channel_name)
                 {
-                    static std::mutex name_mutex;
-                    if (!name.empty())
+                    static std::mutex channel_name_mutex;
+                    if (!channel_name.empty())
                     {
                         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-                        name_mutex.lock();
-                        const auto new_name = std::wstring(converter.from_bytes(name));
-                        if (this->name.compare(new_name) != 0)
+                        channel_name_mutex.lock();
+                        const auto new_channel_name = std::wstring(converter.from_bytes(channel_name));
+                        if (this->channel_name.compare(new_channel_name) != 0)
                         {
-                            log::logger::get_instance().debug("Try to set real channel name to " + name);
-                            this->name.assign(new_name);
+                            log::logger::get_instance().debug("Try to set real channel name to " + channel_name);
+                            this->channel_name.assign(new_channel_name);
                         }
-                        name_mutex.unlock();
+                        channel_name_mutex.unlock();
                     }
                     return true;
                 }
@@ -345,7 +345,7 @@ namespace vita
 
                 bool client::is_ready() const
                 {
-                    const auto pipe_name = impl_->get_wide_name();
+                    const auto pipe_name = impl_->get_wide_channel_name();
 
                     const auto pipe_handle = CreateFileW(
                             pipe_name.c_str(),
@@ -434,7 +434,7 @@ namespace vita
 
                 std::wstring client::request(const std::wstring& input) const
                 {
-                    const auto pipe_name = impl_->get_wide_name();
+                    const auto pipe_name = impl_->get_wide_channel_name();
 
                     const auto pipe_handle = CreateFileW(
                             pipe_name.c_str(),
@@ -518,7 +518,7 @@ namespace vita
                 bool client::set_name(const std::string& name) const
                 {
                     const auto name_in_hex = crypto::sha1::generate_from_utf8_string_in_hex(name);
-                    return impl_->set_name(R"(\\.\pipe\)" + name_in_hex);
+                    return impl_->set_channel_name(R"(\\.\pipe\)" + name_in_hex);
                 }
             }
 
