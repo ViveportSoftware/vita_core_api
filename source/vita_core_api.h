@@ -44,4 +44,11 @@ VITA_CORE_API size_t vita_core_runtime_ipcchannel_client_request(
         size_t count
 );
 
+VITA_CORE_API size_t vita_core_runtime_ipcchannel_client_request_ex(
+        const char* channel_name,
+        const wchar_t* input,
+        wchar_t* output,
+        size_t count
+);
+
 VITA_CORE_API int vita_core_runtime_ipcchannel_client_set_name(const char* name);

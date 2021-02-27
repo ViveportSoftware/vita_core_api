@@ -377,6 +377,20 @@ namespace vita
                     );
                 }
 
+                std::wstring client::request(
+                        const std::string& channel_name,
+                        const std::wstring& input) const
+                {
+                    const auto channel_name_in_hex = crypto::sha1::generate_from_utf8_string_in_hex(channel_name);
+                    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+                    const auto pipe_name = std::wstring(converter.from_bytes(R"(\\.\pipe\)" + channel_name_in_hex));
+
+                    return pipe_request(
+                            pipe_name,
+                            input
+                    );
+                }
+
                 bool client::set_name(const std::string& name) const
                 {
                     const auto name_in_hex = crypto::sha1::generate_from_utf8_string_in_hex(name);

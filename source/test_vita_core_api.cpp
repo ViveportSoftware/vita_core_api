@@ -104,4 +104,36 @@ TEST_CASE("IPC request is sent", "[ipcchannel]") {
         std::wcout << "Output (2nd-pass) size: " << output_size << ", data: \"" << std::wstring(output) << "\"" << std::endl;
     }
     delete[] output;
+
+    auto output_ex = new wchar_t[output_buffer_size];
+    const auto count1_ex = vita_core_runtime_ipcchannel_client_request_ex(
+            pipe_name,
+            input.c_str(),
+            output_ex,
+            output_buffer_size
+    );
+    REQUIRE(count1_ex > 0);
+
+    auto output_ex_size = std::min(count1_ex, output_buffer_size);
+    if (count1_ex <= output_buffer_size)
+    {
+        std::wcout << "Output size: " << output_ex_size << ", data: \"" << std::wstring(output_ex) << "\"" << std::endl;
+    }
+    else
+    {
+        std::wcout << "Output (1st-pass) size: " << output_ex_size << ", data: \"" << std::wstring(output_ex) << "\"" << std::endl;
+        delete[] output_ex;
+        output_ex = new wchar_t[count1_ex];
+        const auto count2_ex = vita_core_runtime_ipcchannel_client_request_ex(
+                pipe_name,
+                input.c_str(),
+                output_ex,
+                count1_ex
+        );
+        REQUIRE(count2_ex > 0);
+
+        output_size = std::min(count2_ex, count1_ex);
+        std::wcout << "Output (2nd-pass) size: " << output_ex_size << ", data: \"" << std::wstring(output_ex) << "\"" << std::endl;
+    }
+    delete[] output_ex;
 }

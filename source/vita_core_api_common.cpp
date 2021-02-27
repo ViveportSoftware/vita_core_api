@@ -211,6 +211,33 @@ size_t vita_core_runtime_ipcchannel_client_request(
     return result_array_size;
 }
 
+size_t vita_core_runtime_ipcchannel_client_request_ex(
+        const char* channel_name,
+        const wchar_t* input,
+        wchar_t* output,
+        size_t count)
+{
+    auto result = vita::core::runtime::ipcchannel::client::get_instance().request(
+            channel_name,
+            input
+    );
+    const auto result_array = result.c_str();
+    const auto result_array_size = result.length() + 1; // null terminated
+    const auto size = count < result_array_size ? count : result_array_size;
+    for (size_t i = 0; i < size; i++)
+    {
+        if (i == size - 1)
+        {
+            output[i] = L'\0';
+        }
+        else
+        {
+            output[i] = result_array[i];
+        }
+    }
+    return result_array_size;
+}
+
 int vita_core_runtime_ipcchannel_client_set_name(const char* name)
 {
     const auto success = vita::core::runtime::ipcchannel::client::get_instance().set_name(name);
