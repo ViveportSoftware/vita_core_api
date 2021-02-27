@@ -178,6 +178,16 @@ int vita_core_runtime_ipcchannel_client_is_ready()
     return 0;
 }
 
+int vita_core_runtime_ipcchannel_client_is_ready_ex(const char* channel_name)
+{
+    const auto success = vita::core::runtime::ipcchannel::client::get_instance().is_ready(channel_name);
+    if (success)
+    {
+        return 1;
+    }
+    return 0;
+}
+
 size_t vita_core_runtime_ipcchannel_client_request(
         const wchar_t* input,
         wchar_t* output,

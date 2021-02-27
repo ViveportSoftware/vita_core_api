@@ -71,6 +71,8 @@ TEST_CASE("IPC request is sent", "[ipcchannel]") {
 
     REQUIRE(vita_core_runtime_ipcchannel_client_is_ready());
 
+    REQUIRE(vita_core_runtime_ipcchannel_client_is_ready_ex(pipe_name));
+
     std::wstring input = L"123測試123čřžýáí";
     const size_t output_buffer_size = 13;
     auto output = new wchar_t[output_buffer_size];

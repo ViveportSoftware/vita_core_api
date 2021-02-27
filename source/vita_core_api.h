@@ -36,6 +36,8 @@ VITA_CORE_API ivita_core_runtime_ipcchannel_client* vita_core_runtime_ipcchannel
 
 VITA_CORE_API int vita_core_runtime_ipcchannel_client_is_ready();
 
+VITA_CORE_API int vita_core_runtime_ipcchannel_client_is_ready_ex(const char* channel_name);
+
 VITA_CORE_API size_t vita_core_runtime_ipcchannel_client_request(
         const wchar_t* input,
         wchar_t* output,

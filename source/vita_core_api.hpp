@@ -135,6 +135,7 @@ namespace vita
                     ~client();
 
                     bool is_ready() const;
+                    bool is_ready(const std::string& channel_name) const;
                     std::wstring request(const std::wstring& input) const;
                     bool set_name(const std::string& name) const;
 
