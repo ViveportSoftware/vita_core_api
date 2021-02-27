@@ -20,6 +20,10 @@
 
 //+ forward declaration
 bool pipe_is_ready(const std::wstring& pipe_name);
+std::wstring pipe_request(
+        const std::wstring& pipe_name,
+        const std::wstring& input
+);
 LONG registry_get_dword_value(
         HKEY registry_key,
         const std::wstring& value_name,
@@ -367,84 +371,10 @@ namespace vita
                 std::wstring client::request(const std::wstring& input) const
                 {
                     const auto pipe_name = impl_->get_wide_channel_name();
-
-                    const auto pipe_handle = CreateFileW(
-                            pipe_name.c_str(),
-                            GENERIC_READ | GENERIC_WRITE,
-                            FILE_SHARE_READ | FILE_SHARE_WRITE,
-                            nullptr,
-                            OPEN_EXISTING,
-                            FILE_ATTRIBUTE_NORMAL,
-                            nullptr
+                    return pipe_request(
+                            pipe_name,
+                            input
                     );
-                    if (pipe_handle == INVALID_HANDLE_VALUE)
-                    {
-                        std::cout << "pipe handle is not valid" << std::endl;
-                        if (GetLastError() != ERROR_PIPE_BUSY)
-                        {
-                            log::logger::get_instance().error("can not open pipe. GLE=" + std::to_string(GetLastError()));
-                        }
-                        return L"";
-                    }
-
-                    DWORD read_mode = PIPE_READMODE_MESSAGE;
-                    auto success = SetNamedPipeHandleState(
-                            pipe_handle,
-                            &read_mode,
-                            nullptr,
-                            nullptr
-                    );
-                    if (!success)
-                    {
-                        log::logger::get_instance().error("can not set named pipe handle state. GLE=" + std::to_string(GetLastError()));
-                        CloseHandle(pipe_handle);
-                        return L"";
-                    }
-
-                    const auto utf8_input = util::convert::wstring_to_utf8_string(input);
-                    const auto message_to_send = utf8_input.c_str();
-                    const auto bytes_to_write = static_cast<DWORD>((std::strlen(message_to_send) + 1) * sizeof(char));  // NOLINT
-
-                    DWORD bytes_written = 0;
-                    log::logger::get_instance().debug("sending " + std::to_string(bytes_to_write) + " byte message: \"" + message_to_send + "\"");
-                    success = WriteFile(
-                            pipe_handle,
-                            message_to_send,
-                            bytes_to_write,
-                            &bytes_written,
-                            nullptr
-                    );
-                    if (!success)
-                    {
-                        log::logger::get_instance().error("can not write message to pipe. GLE=" + std::to_string(GetLastError()));
-                        CloseHandle(pipe_handle);
-                        return L"";
-                    }
-
-                    std::stringstream message_received;
-                    const auto buffer_size = 512;
-                    char buffer_to_write[buffer_size];
-                    DWORD bytes_read = 0;
-                    do
-                    {
-                        success = ReadFile(
-                                pipe_handle,
-                                buffer_to_write,
-                                buffer_size * sizeof(char),
-                                &bytes_read,
-                                nullptr
-                        );
-
-                        if (!success && GetLastError() != ERROR_MORE_DATA)
-                        {
-                            break;
-                        }
-                        message_received << std::string(buffer_to_write, bytes_read);
-                    } while (!success);
-
-                    CloseHandle(pipe_handle);
-                    auto output = util::convert::utf8_string_to_wstring(std::string(message_received.str()));
-                    return output;
                 }
 
                 bool client::set_name(const std::string& name) const
@@ -814,6 +744,89 @@ bool pipe_is_ready(const std::wstring& pipe_name)
 
     CloseHandle(pipe_handle);
     return true;
+}
+
+std::wstring pipe_request(
+        const std::wstring& pipe_name,
+        const std::wstring& input)
+{
+    const auto pipe_handle = CreateFileW(
+            pipe_name.c_str(),
+            GENERIC_READ | GENERIC_WRITE,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr
+    );
+    if (pipe_handle == INVALID_HANDLE_VALUE)
+    {
+        std::cout << "pipe handle is not valid" << std::endl;
+        if (GetLastError() != ERROR_PIPE_BUSY)
+        {
+            vita::core::log::logger::get_instance().error("can not open pipe. GLE=" + std::to_string(GetLastError()));
+        }
+        return L"";
+    }
+
+    DWORD read_mode = PIPE_READMODE_MESSAGE;
+    auto success = SetNamedPipeHandleState(
+            pipe_handle,
+            &read_mode,
+            nullptr,
+            nullptr
+    );
+    if (!success)
+    {
+        vita::core::log::logger::get_instance().error("can not set named pipe handle state. GLE=" + std::to_string(GetLastError()));
+        CloseHandle(pipe_handle);
+        return L"";
+    }
+
+    const auto utf8_input = vita::core::util::convert::wstring_to_utf8_string(input);
+    const auto message_to_send = utf8_input.c_str();
+    const auto bytes_to_write = static_cast<DWORD>((std::strlen(message_to_send) + 1) * sizeof(char));  // NOLINT
+
+    DWORD bytes_written = 0;
+    vita::core::log::logger::get_instance().debug("sending " + std::to_string(bytes_to_write) + " byte message: \"" + message_to_send + "\"");
+    success = WriteFile(
+            pipe_handle,
+            message_to_send,
+            bytes_to_write,
+            &bytes_written,
+            nullptr
+    );
+    if (!success)
+    {
+        vita::core::log::logger::get_instance().error("can not write message to pipe. GLE=" + std::to_string(GetLastError()));
+        CloseHandle(pipe_handle);
+        return L"";
+    }
+
+    std::stringstream message_received;
+    const auto buffer_size = 512;
+    char buffer_to_write[buffer_size];
+    DWORD bytes_read = 0;
+    do
+    {
+        success = ReadFile(
+                pipe_handle,
+                buffer_to_write,
+                buffer_size * sizeof(char),
+                &bytes_read,
+                nullptr
+        );
+
+        if (!success && GetLastError() != ERROR_MORE_DATA)
+        {
+            break;
+        }
+        message_received << std::string(buffer_to_write, bytes_read);
+    } while (!success);
+
+    CloseHandle(pipe_handle);
+    auto output = vita::core::util::convert::utf8_string_to_wstring(std::string(message_received.str()));
+    return output;
 }
 
 LONG registry_get_dword_value(
