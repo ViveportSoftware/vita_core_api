@@ -391,10 +391,10 @@ namespace vita
                     );
                 }
 
-                bool client::set_name(const std::string& name) const
+                bool client::set_name(const std::string& channel_name) const
                 {
-                    const auto name_in_hex = crypto::sha1::generate_from_utf8_string_in_hex(name);
-                    return impl_->set_channel_name(R"(\\.\pipe\)" + name_in_hex);
+                    const auto channel_name_in_hex = crypto::sha1::generate_from_utf8_string_in_hex(channel_name);
+                    return impl_->set_channel_name(R"(\\.\pipe\)" + channel_name_in_hex);
                 }
             }
 

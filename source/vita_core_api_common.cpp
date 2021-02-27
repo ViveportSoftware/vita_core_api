@@ -238,9 +238,9 @@ size_t vita_core_runtime_ipcchannel_client_request_ex(
     return result_array_size;
 }
 
-int vita_core_runtime_ipcchannel_client_set_name(const char* name)
+int vita_core_runtime_ipcchannel_client_set_name(const char* channel_name)
 {
-    const auto success = vita::core::runtime::ipcchannel::client::get_instance().set_name(name);
+    const auto success = vita::core::runtime::ipcchannel::client::get_instance().set_name(channel_name);
     if (success)
     {
         return 1;

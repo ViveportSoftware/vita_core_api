@@ -141,7 +141,7 @@ namespace vita
                             const std::string& channel_name,
                             const std::wstring& input
                     ) const;
-                    bool set_name(const std::string& name) const;
+                    bool set_name(const std::string& channel_name) const;
 
                 private:
                     client();
