@@ -232,6 +232,11 @@ namespace vita
                     return "";
                 }
 
+                CryptDestroyHash(crypto_hash_handle);
+                CryptReleaseContext(
+                        crypto_provider_handle,
+                        0
+                );
                 return util::convert::to_hex_string(
                         digest,
                         byte_to_write
@@ -904,6 +909,7 @@ LONG registry_get_string_value(
     {
         value = registry_value_data;
     }
+    delete[] registry_value_data;
     return status;
 }
 
