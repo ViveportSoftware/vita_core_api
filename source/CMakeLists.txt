@@ -13,6 +13,7 @@ option( BUILD_WITH_SHARED_VCRT "Build library with shared vc runtime library." O
 option( BUILD_WITH_STATIC_VCRT "Build library without shared vc runtime library." OFF )
 option( BUILD_WITH_TEST_RUNNER "Build library and start test runner." OFF )
 option( BUILD_WITH_WORKAROUND_ARM64RT "Build library with workaround arm64rt.lib library" OFF )
+option( BUILD_WITH_WORKAROUND_SOFTINTRIN "Build library with workaround softintrin.lib library" OFF )
 
 ## Separate MY_VER into MY_VER_MAJOR / MY_VER_MINOR / MY_VER_PATCH / MY_VER_PATCHLEVEL
 string( REGEX MATCHALL "[0-9]+" _my_ver_LIST "${MY_VER}" )
@@ -119,6 +120,15 @@ if( WIN32 )
     target_link_libraries(
         ${PROJECT_NAME}_static
         arm64rt.lib )
+  endif()
+
+  if( BUILD_WITH_WORKAROUND_SOFTINTRIN )
+    target_link_libraries(
+        ${PROJECT_NAME}
+        softintrin.lib )
+    target_link_libraries(
+        ${PROJECT_NAME}_static
+        softintrin.lib )
   endif()
 
   if( BUILD_WITH_TEST_RUNNER )

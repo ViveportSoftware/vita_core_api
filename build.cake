@@ -63,14 +63,17 @@ var nugetDir = Directory("./dist") + Directory(configuration) + Directory("nuget
 var homeDir = Directory(EnvironmentVariable("USERPROFILE") ?? EnvironmentVariable("HOME"));
 var tempPlatformDirARM = tempDir + Directory(configuration) + Directory("ARM");
 var tempPlatformDirARM64 = tempDir + Directory(configuration) + Directory("ARM64");
+var tempPlatformDirARM64EC = tempDir + Directory(configuration) + Directory("ARM64EC");
 var tempPlatformDirWin32 = tempDir + Directory(configuration) + Directory("Win32");
 var tempPlatformDirX64 = tempDir + Directory(configuration) + Directory("x64");
 var msbuildDefaultTargetARM = File(tempPlatformDirARM.ToString() + "/" + product + ".sln");
 var msbuildDefaultTargetARM64 = File(tempPlatformDirARM64.ToString() + "/" + product + ".sln");
+var msbuildDefaultTargetARM64EC = File(tempPlatformDirARM64EC.ToString() + "/" + product + ".sln");
 var msbuildDefaultTargetWin32 = File(tempPlatformDirWin32.ToString() + "/" + product + ".sln");
 var msbuildDefaultTargetX64 = File(tempPlatformDirX64.ToString() + "/" + product + ".sln");
 var msbuildCTestTargetARM = File(tempPlatformDirARM.ToString() + "/RUN_TESTS.vcxproj");
 var msbuildCTestTargetARM64 = File(tempPlatformDirARM64.ToString() + "/RUN_TESTS.vcxproj");
+var msbuildCTestTargetARM64EC = File(tempPlatformDirARM64EC.ToString() + "/RUN_TESTS.vcxproj");
 var msbuildCTestTargetWin32 = File(tempPlatformDirWin32.ToString() + "/RUN_TESTS.vcxproj");
 var msbuildCTestTargetX64 = File(tempPlatformDirX64.ToString() + "/RUN_TESTS.vcxproj");
 
@@ -218,13 +221,14 @@ Task("Build-Binary-ARM64")
     if(IsRunningOnWindows())
     {
         CreateDirectory(tempPlatformDirARM64);
+        var cmakeOptionsArm64 = new List<string>(cmakeOptions);
         if ("ON".Equals(cmakeWithWorkaroundArm64Rt))
         {
-            cmakeOptions.Add("-DBUILD_WITH_WORKAROUND_ARM64RT=ON");
+            cmakeOptionsArm64.Add("-DBUILD_WITH_WORKAROUND_ARM64RT=ON");
         }
         var cmakeSettings = new CMakeSettings
         {
-                Options = cmakeOptions.ToArray(),
+                Options = cmakeOptionsArm64.ToArray(),
                 OutputPath = tempPlatformDirARM64,
                 Platform = "ARM64"
         };
@@ -243,9 +247,40 @@ Task("Build-Binary-ARM64")
     }
 });
 
+Task("Build-Binary-ARM64EC")
+    .WithCriteria(() => ("v142".Equals(cmakeToolset) || "v143".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArmBinary))
+    .IsDependentOn("Build-Binary-ARM64")
+    .Does(() =>
+{
+    if(IsRunningOnWindows())
+    {
+        CreateDirectory(tempPlatformDirARM64EC);
+        var cmakeOptionsArm64Ec = new List<string>(cmakeOptions);
+        cmakeOptionsArm64Ec.Add("-DBUILD_WITH_WORKAROUND_SOFTINTRIN=ON");
+        var cmakeSettings = new CMakeSettings
+        {
+                Options = cmakeOptionsArm64Ec.ToArray(),
+                OutputPath = tempPlatformDirARM64EC,
+                Platform = "ARM64EC"
+        };
+        if (!string.IsNullOrEmpty(cmakeToolset))
+        {
+            cmakeSettings.Toolset = cmakeToolset;
+        }
+        CMake(
+                sourceDir,
+                cmakeSettings
+        );
+        MSBuild(
+                msbuildDefaultTargetARM64EC,
+                msbuildSettings
+        );
+    }
+});
+
 Task("Test-Binary-Win32")
     .WithCriteria(() => FileExists(msbuildCTestTargetWin32))
-    .IsDependentOn("Build-Binary-ARM64")
+    .IsDependentOn("Build-Binary-ARM64EC")
     .Does(() =>
 {
     if(IsRunningOnWindows())
@@ -369,6 +404,29 @@ Task("Sign-Binaries")
         );
         lastSignTimestamp = DateTime.Now;
     }
+
+    if (("v142".Equals(cmakeToolset) || "v143".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArmBinary))
+    {
+        file = string.Format("./temp/{0}/ARM64EC/{0}/{1}64.dll", configuration, product);
+
+        if (totalTimeInMilli < signIntervalInMilli)
+        {
+            System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
+        }
+        Sign(
+                file,
+                new SignToolSignSettings
+                {
+                        AppendSignature = true,
+                        TimeStampUri = signSha256Uri,
+                        DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
+                        TimeStampDigestAlgorithm = SignToolDigestAlgorithm.Sha256,
+                        CertPath = signKey,
+                        Password = signPass
+                }
+        );
+        lastSignTimestamp = DateTime.Now;
+    }
 });
 
 Task("Build-NuGet-Package")
@@ -405,6 +463,30 @@ Task("Build-NuGet-Package")
                     Target = "lib\\x64"
             }
     );
+    if (("v142".Equals(cmakeToolset) || "v143".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArmBinary))
+    {
+        nuspecContents.Add(
+                new NuSpecContent
+                {
+                        Source = string.Format("ARM64EC/{0}/{1}64.dll", configuration, product),
+                        Target = "lib\\ARM64EC"
+                }
+        );
+        nuspecContents.Add(
+                new NuSpecContent
+                {
+                        Source = string.Format("ARM64EC/{0}/{1}64.lib", configuration, product),
+                        Target = "lib\\ARM64EC"
+                }
+        );
+        nuspecContents.Add(
+                new NuSpecContent
+                {
+                        Source = string.Format("ARM64EC/{0}/{1}64_static.lib", configuration, product),
+                        Target = "lib\\ARM64EC"
+                }
+        );
+    }
     if (("v141".Equals(cmakeToolset) || "v142".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArmBinary))
     {
         nuspecContents.Add(
@@ -483,6 +565,16 @@ Task("Build-NuGet-Package")
                         Target = "lib\\x64"
                 }
         );
+        if (("v142".Equals(cmakeToolset) || "v143".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArmBinary))
+        {
+            nuspecContents.Add(
+                    new NuSpecContent
+                    {
+                            Source = string.Format("ARM64EC/{0}/{1}64.pdb", configuration, product),
+                            Target = "lib\\ARM64EC"
+                    }
+            );
+        }
         if (("v141".Equals(cmakeToolset) || "v142".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArmBinary))
         {
             nuspecContents.Add(
