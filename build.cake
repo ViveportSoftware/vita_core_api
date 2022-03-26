@@ -9,6 +9,7 @@ var configuration = Argument("configuration", "Debug");
 var revision = EnvironmentVariable("BUILD_NUMBER") ?? Argument("revision", "9999");
 var target = Argument("target", "Default");
 var cmakeToolset = EnvironmentVariable("CMAKE_TOOLSET") ?? "v141";
+var cmakeWithArm64EcBinary = EnvironmentVariable("CMAKE_WITH_ARM64EC_BINARY") ?? "ON";
 var cmakeWithArmBinary = EnvironmentVariable("CMAKE_WITH_ARM_BINARY") ?? "ON";
 var cmakeWithSharedVcrt = EnvironmentVariable("CMAKE_WITH_SHARED_VCRT") ?? "OFF";
 var cmakeWithStaticVcrt = EnvironmentVariable("CMAKE_WITH_STATIC_VCRT") ?? "ON";
@@ -248,7 +249,7 @@ Task("Build-Binary-ARM64")
 });
 
 Task("Build-Binary-ARM64EC")
-    .WithCriteria(() => ("v142".Equals(cmakeToolset) || "v143".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArmBinary))
+    .WithCriteria(() => ("v142".Equals(cmakeToolset) || "v143".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArm64EcBinary))
     .IsDependentOn("Build-Binary-ARM64")
     .Does(() =>
 {
@@ -405,7 +406,7 @@ Task("Sign-Binaries")
         lastSignTimestamp = DateTime.Now;
     }
 
-    if (("v142".Equals(cmakeToolset) || "v143".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArmBinary))
+    if (("v142".Equals(cmakeToolset) || "v143".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArm64EcBinary))
     {
         file = string.Format("./temp/{0}/ARM64EC/{0}/{1}64.dll", configuration, product);
 
@@ -463,7 +464,7 @@ Task("Build-NuGet-Package")
                     Target = "lib\\x64"
             }
     );
-    if (("v142".Equals(cmakeToolset) || "v143".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArmBinary))
+    if (("v142".Equals(cmakeToolset) || "v143".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArm64EcBinary))
     {
         nuspecContents.Add(
                 new NuSpecContent
@@ -565,7 +566,7 @@ Task("Build-NuGet-Package")
                         Target = "lib\\x64"
                 }
         );
-        if (("v142".Equals(cmakeToolset) || "v143".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArmBinary))
+        if (("v142".Equals(cmakeToolset) || "v143".Equals(cmakeToolset)) && "ON".Equals(cmakeWithArm64EcBinary))
         {
             nuspecContents.Add(
                     new NuSpecContent
