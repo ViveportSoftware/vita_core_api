@@ -12,6 +12,7 @@ project( ${MY_PROJECT_NAME} )
 option( BUILD_WITH_SHARED_VCRT "Build library with shared vc runtime library." ON )
 option( BUILD_WITH_STATIC_VCRT "Build library without shared vc runtime library." OFF )
 option( BUILD_WITH_TEST_RUNNER "Build library and start test runner." OFF )
+option( BUILD_WITH_WORKAROUND_ARM64RT "Build library with workaround arm64rt.lib library" OFF )
 
 ## Separate MY_VER into MY_VER_MAJOR / MY_VER_MINOR / MY_VER_PATCH / MY_VER_PATCHLEVEL
 string( REGEX MATCHALL "[0-9]+" _my_ver_LIST "${MY_VER}" )
@@ -110,6 +111,15 @@ if( WIN32 )
   target_link_libraries(
       test_${PROJECT_NAME}_static
       ${PROJECT_NAME}_static )
+
+  if( BUILD_WITH_WORKAROUND_ARM64RT )
+    target_link_libraries(
+        ${PROJECT_NAME}
+        arm64rt.lib )
+    target_link_libraries(
+        ${PROJECT_NAME}_static
+        arm64rt.lib )
+  endif()
 
   if( BUILD_WITH_TEST_RUNNER )
     enable_testing()

@@ -13,6 +13,7 @@ var cmakeWithArmBinary = EnvironmentVariable("CMAKE_WITH_ARM_BINARY") ?? "ON";
 var cmakeWithSharedVcrt = EnvironmentVariable("CMAKE_WITH_SHARED_VCRT") ?? "OFF";
 var cmakeWithStaticVcrt = EnvironmentVariable("CMAKE_WITH_STATIC_VCRT") ?? "ON";
 var cmakeWithTestRunner = EnvironmentVariable("CMAKE_WITH_TEST_RUNNER") ?? "OFF";
+var cmakeWithWorkaroundArm64Rt = EnvironmentVariable("CMAKE_WITH_WORKAROUND_ARM64RT") ?? "OFF";
 
 
 //////////////////////////////////////////////////////////////////////
@@ -217,6 +218,10 @@ Task("Build-Binary-ARM64")
     if(IsRunningOnWindows())
     {
         CreateDirectory(tempPlatformDirARM64);
+        if ("ON".Equals(cmakeWithWorkaroundArm64Rt))
+        {
+            cmakeOptions.Add("-DBUILD_WITH_WORKAROUND_ARM64RT=ON");
+        }
         var cmakeSettings = new CMakeSettings
         {
                 Options = cmakeOptions.ToArray(),
