@@ -289,18 +289,6 @@ Task("Sign-Binaries")
             file,
             new SignToolSignSettings
             {
-                    TimeStampUri = signSha1Uri,
-                    CertPath = signKey,
-                    Password = signPass
-            }
-    );
-    lastSignTimestamp = DateTime.Now;
-
-    System.Threading.Thread.Sleep(signIntervalInMilli);
-    Sign(
-            file,
-            new SignToolSignSettings
-            {
                     AppendSignature = true,
                     TimeStampUri = signSha256Uri,
                     DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
@@ -317,18 +305,6 @@ Task("Sign-Binaries")
     {
         System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
     }
-    Sign(
-            file,
-            new SignToolSignSettings
-            {
-                    TimeStampUri = signSha1Uri,
-                    CertPath = signKey,
-                    Password = signPass
-            }
-    );
-    lastSignTimestamp = DateTime.Now;
-
-    System.Threading.Thread.Sleep(signIntervalInMilli);
     Sign(
             file,
             new SignToolSignSettings
@@ -355,18 +331,6 @@ Task("Sign-Binaries")
                 file,
                 new SignToolSignSettings
                 {
-                        TimeStampUri = signSha1Uri,
-                        CertPath = signKey,
-                        Password = signPass
-                }
-        );
-        lastSignTimestamp = DateTime.Now;
-
-        System.Threading.Thread.Sleep(signIntervalInMilli);
-        Sign(
-                file,
-                new SignToolSignSettings
-                {
                         AppendSignature = true,
                         TimeStampUri = signSha256Uri,
                         DigestAlgorithm = SignToolDigestAlgorithm.Sha256,
@@ -386,18 +350,6 @@ Task("Sign-Binaries")
         {
             System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
         }
-        Sign(
-                file,
-                new SignToolSignSettings
-                {
-                        TimeStampUri = signSha1Uri,
-                        CertPath = signKey,
-                        Password = signPass
-                }
-        );
-        lastSignTimestamp = DateTime.Now;
-
-        System.Threading.Thread.Sleep(signIntervalInMilli);
         Sign(
                 file,
                 new SignToolSignSettings
