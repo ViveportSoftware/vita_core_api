@@ -16,6 +16,7 @@ var cmakeWithSharedVcrt = EnvironmentVariable("CMAKE_WITH_SHARED_VCRT") ?? "OFF"
 var cmakeWithStaticVcrt = EnvironmentVariable("CMAKE_WITH_STATIC_VCRT") ?? "ON";
 var cmakeWithTestRunner = EnvironmentVariable("CMAKE_WITH_TEST_RUNNER") ?? "OFF";
 var cmakeWithWorkaroundArm64Rt = EnvironmentVariable("CMAKE_WITH_WORKAROUND_ARM64RT") ?? "OFF";
+var cmakeWithWorkaroundSpectre = EnvironmentVariable("CMAKE_WITH_WORKAROUND_SPECTRE") ?? "OFF";
 
 
 //////////////////////////////////////////////////////////////////////
@@ -43,6 +44,7 @@ var cmakeOptions = new List<string>();
 cmakeOptions.Add("-DBUILD_WITH_SHARED_VCRT=" + cmakeWithSharedVcrt);
 cmakeOptions.Add("-DBUILD_WITH_STATIC_VCRT=" + cmakeWithStaticVcrt);
 cmakeOptions.Add("-DBUILD_WITH_TEST_RUNNER=" + cmakeWithTestRunner);
+cmakeOptions.Add("-DBUILD_WITH_WORKAROUND_SPECTRE=" + cmakeWithWorkaroundSpectre);
 cmakeOptions.Add("-DMY_PROJECT_DESC=" + productDescription);
 cmakeOptions.Add("-DMY_PROJECT_NAME=" + product);
 cmakeOptions.Add("-DMY_REVISION=" + revision);

@@ -1,5 +1,7 @@
 #
 #
+include(CheckCXXCompilerFlag)
+
 if( MSVC )
   string(APPEND CMAKE_CXX_FLAGS " /EHsc")
 endif()
@@ -7,7 +9,6 @@ endif()
 if( BUILD_WITH_SHARED_VCRT )
   ## Presets:
   ##   Use /MD build instead of /MT to be dependent on msvcrtXXX.dll
-  ##   Use /Z7 build instead of /Zi to avoid vcXXX.pdb
   foreach( flag_var
       CMAKE_C_FLAGS
       CMAKE_C_FLAGS_DEBUG
@@ -28,7 +29,6 @@ endif()
 if( BUILD_WITH_STATIC_VCRT )
   ## Presets:
   ##   Use /MT build instead of /MD to avoid msvcrtXXX.dll
-  ##   Use /Z7 build instead of /Zi to avoid vcXXX.pdb
   foreach( flag_var
       CMAKE_C_FLAGS
       CMAKE_C_FLAGS_DEBUG
@@ -46,6 +46,16 @@ if( BUILD_WITH_STATIC_VCRT )
   endforeach()
 endif()
 
+if( BUILD_WITH_WORKAROUND_SPECTRE )
+  ## Presets:
+  ##   Use /Qspectre for Spectre mitigation
+  check_cxx_compiler_flag( -Qspectre HAS_QSPECTRE )
+  if( HAS_QSPECTRE )
+    string(APPEND CMAKE_CXX_FLAGS " /Qspectre")
+  endif()
+endif()
+
+## Use /Z7 build instead of /Zi to avoid vcXXX.pdb
 foreach( flag_var
     CMAKE_C_FLAGS
     CMAKE_C_FLAGS_DEBUG

@@ -14,6 +14,7 @@ option( BUILD_WITH_STATIC_VCRT "Build library without shared vc runtime library.
 option( BUILD_WITH_TEST_RUNNER "Build library and start test runner." OFF )
 option( BUILD_WITH_WORKAROUND_ARM64RT "Build library with workaround arm64rt.lib library" OFF )
 option( BUILD_WITH_WORKAROUND_SOFTINTRIN "Build library with workaround softintrin.lib library" OFF )
+option( BUILD_WITH_WORKAROUND_SPECTRE "Build library with workaround spectre mitigation library" OFF )
 
 ## Separate MY_VER into MY_VER_MAJOR / MY_VER_MINOR / MY_VER_PATCH / MY_VER_PATCHLEVEL
 string( REGEX MATCHALL "[0-9]+" _my_ver_LIST "${MY_VER}" )
