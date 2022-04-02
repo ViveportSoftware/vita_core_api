@@ -1,8 +1,14 @@
 #
 #
+include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
-if( MSVC )
+check_c_compiler_flag( -EHsc HAS_EHSC_C )
+if( HAS_EHSC_C )
+  string(APPEND CMAKE_C_FLAGS " /EHsc")
+endif()
+check_cxx_compiler_flag( -EHsc HAS_EHSC_CXX )
+if( HAS_EHSC_CXX )
   string(APPEND CMAKE_CXX_FLAGS " /EHsc")
 endif()
 
@@ -46,11 +52,28 @@ if( BUILD_WITH_STATIC_VCRT )
   endforeach()
 endif()
 
+if( BUILD_WITH_WORKAROUND_OPT_GY )
+  ## Presets:
+  ##   Use /Gy for enabling function-level linking
+  check_c_compiler_flag( -Gy HAS_GY_C )
+  if( HAS_GY_C )
+    string(APPEND CMAKE_C_FLAGS " /Gy")
+  endif()
+  check_cxx_compiler_flag( -Gy HAS_GY_CXX )
+  if( HAS_GY_CXX )
+    string(APPEND CMAKE_CXX_FLAGS " /Gy")
+  endif()
+endif()
+
 if( BUILD_WITH_WORKAROUND_SPECTRE )
   ## Presets:
   ##   Use /Qspectre for Spectre mitigation
-  check_cxx_compiler_flag( -Qspectre HAS_QSPECTRE )
-  if( HAS_QSPECTRE )
+  check_c_compiler_flag( -Qspectre HAS_QSPECTRE_C )
+  if( HAS_QSPECTRE_C )
+    string(APPEND CMAKE_C_FLAGS " /Qspectre")
+  endif()
+  check_cxx_compiler_flag( -Qspectre HAS_QSPECTRE_CXX )
+  if( HAS_QSPECTRE_CXX )
     string(APPEND CMAKE_CXX_FLAGS " /Qspectre")
   endif()
 endif()
