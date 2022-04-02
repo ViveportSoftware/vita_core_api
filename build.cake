@@ -334,18 +334,9 @@ Task("Sign-Binaries")
     .IsDependentOn("Test-Binary-x64")
     .Does(() =>
 {
-    var currentSignTimestamp = DateTime.Now;
-    Information("Last timestamp:    " + lastSignTimestamp);
-    Information("Current timestamp: " + currentSignTimestamp);
-    var totalTimeInMilli = (DateTime.Now - lastSignTimestamp).TotalMilliseconds;
-
     var signKey = "./temp/key.pfx";
     System.IO.File.WriteAllBytes(signKey, Convert.FromBase64String(signKeyEnc));
 
-    if (totalTimeInMilli < signIntervalInMilli)
-    {
-        System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
-    }
     Sign(
             string.Format("./temp/{0}/x64/{0}/{1}64.dll", configuration, product),
             new SignToolSignSettings
@@ -358,12 +349,8 @@ Task("Sign-Binaries")
                     Password = signPass
             }
     );
-    lastSignTimestamp = DateTime.Now;
 
-    if (totalTimeInMilli < signIntervalInMilli)
-    {
-        System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
-    }
+    System.Threading.Thread.Sleep(signIntervalInMilli);
     Sign(
             string.Format("./temp/{0}/Win32/{0}/{1}.dll", configuration, product),
             new SignToolSignSettings
@@ -376,14 +363,10 @@ Task("Sign-Binaries")
                     Password = signPass
             }
     );
-    lastSignTimestamp = DateTime.Now;
 
     if (shouldBuildArmBinary)
     {
-        if (totalTimeInMilli < signIntervalInMilli)
-        {
-            System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
-        }
+        System.Threading.Thread.Sleep(signIntervalInMilli);
         Sign(
                 string.Format("./temp/{0}/ARM/{0}/{1}.dll", configuration, product),
                 new SignToolSignSettings
@@ -396,15 +379,11 @@ Task("Sign-Binaries")
                         Password = signPass
                 }
         );
-        lastSignTimestamp = DateTime.Now;
     }
 
     if (shouldBuildArm64Binary)
     {
-        if (totalTimeInMilli < signIntervalInMilli)
-        {
-            System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
-        }
+        System.Threading.Thread.Sleep(signIntervalInMilli);
         Sign(
                 string.Format("./temp/{0}/ARM64/{0}/{1}64.dll", configuration, product),
                 new SignToolSignSettings
@@ -417,15 +396,11 @@ Task("Sign-Binaries")
                         Password = signPass
                 }
         );
-        lastSignTimestamp = DateTime.Now;
     }
 
     if (shouldBuildArm64EcBinary)
     {
-        if (totalTimeInMilli < signIntervalInMilli)
-        {
-            System.Threading.Thread.Sleep(signIntervalInMilli - (int)totalTimeInMilli);
-        }
+        System.Threading.Thread.Sleep(signIntervalInMilli);
         Sign(
                 string.Format("./temp/{0}/ARM64EC/{0}/{1}64.dll", configuration, product),
                 new SignToolSignSettings
@@ -438,7 +413,6 @@ Task("Sign-Binaries")
                         Password = signPass
                 }
         );
-        lastSignTimestamp = DateTime.Now;
     }
 });
 
